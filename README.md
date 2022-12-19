@@ -12,3 +12,7 @@ Studentnummer: 1808662
 GitHub: Quander01
 Hoofdtaak: SD
 
+Naam: Rick van der Kleij
+Studentnummer: 1826226
+GitHub: rick325601
+Hoofdtaak: TI
