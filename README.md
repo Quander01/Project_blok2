@@ -1,7 +1,7 @@
 Hier kunnen wij alle informatie inzetten.
 
 
-##**Collaborators:**
+## **Collaborators:**
 
 Naam: Frank van Leijsen
 Studentnummer: 1843626
