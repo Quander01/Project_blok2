@@ -22,3 +22,8 @@ Naam: Sueño (Swen) Keijer <br />
 Studentnummer: 1819033 <br />
 GitHub: ItsYaBoiSnakon <br />
 Hoofdtaak: SD
+
+Naam: Jia Jun Mak <br />
+Studentnummer: 1837162 <br />
+GitHub: jiajunmakhu <br />
+Hoofdtaak: AI
