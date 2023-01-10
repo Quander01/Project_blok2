@@ -3,10 +3,12 @@ import functools
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Cursor
 import random
 import tkinter as tk
 from tkinter import ttk
 import matplotlib
+import numpy as np
 matplotlib.use("TkAgg")
 
 
@@ -24,7 +26,6 @@ def create_pie_chart(title):
     ax.pie(values, labels=labels, colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'])
     return fig
 
-
 # Function to create a bar chart with random data
 @functools.lru_cache(maxsize=None)
 def create_bar_chart(title):
@@ -37,6 +38,16 @@ def create_bar_chart(title):
     ax.bar(x_values, y_values)
     ax.set_title(title)
     return fig
+
+
+def on_pick(event, wedges):
+    if event.artist in wedges[0]:
+        # Open a smaller detail window over the root window
+        detail_window = tk.Toplevel()
+        detail_window.geometry("200x200")
+        detail_window.title("Detail")
+        detail_label = tk.Label(detail_window, text="This is a detail window")
+        detail_label.pack()
 
 
 def create_gui():
@@ -66,19 +77,21 @@ def create_gui():
     listbox_frame.grid(row=1, column=0, rowspan=3, padx=0, pady=0, sticky='ns')
 
     # Create a filled listbox
-    listbox = tk.Listbox(listbox_frame, bg='#232323', fg='white', selectmode='browse', font=('Helvetica,',20))
+    listbox = tk.Listbox(listbox_frame, bg='#232323', fg='white', selectmode='browse', font=('Helvetica', 20))
     listbox.config(highlightthickness=0)
     listbox.pack(side='left', fill='y')
     for i in range(10):
         listbox.insert(tk.END, f'Friend {i + 1}')
 
+
     # Create all 6 data frames and fill them with graphs
     frame1 = tk.Frame(root)
     frame1.grid(row=1, column=1, padx=20, pady=20)
     fig1 = create_pie_chart('Piechart 1')
+    fig1.canvas.mpl_connect("pick_event", functools.partial(on_pick, parent=root))
     canvas1 = FigureCanvasTkAgg(fig1, master=frame1)
     canvas1.draw()
-    canvas1.get_tk_widget().pack(side=tk.LEFT)
+    canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     frame2 = tk.Frame(root)
     frame2.grid(row=1, column=2, padx=20, pady=20)
@@ -97,6 +110,7 @@ def create_gui():
     frame4 = tk.Frame(root)
     frame4.grid(row=2, column=1, padx=20, pady=20)
     fig4 = create_pie_chart('piechart 2')
+    fig4.canvas.mpl_connect("pick_event", functools.partial(on_pick, parent=root))
     canvas4 = FigureCanvasTkAgg(fig4, master=frame4)
     canvas4.draw()
     canvas4.get_tk_widget().pack(side=tk.LEFT)
@@ -104,6 +118,7 @@ def create_gui():
     frame5 = tk.Frame(root)
     frame5.grid(row=2, column=2, padx=20, pady=20)
     fig5 = create_pie_chart('Piechart 3')
+    fig5.canvas.mpl_connect("pick_event", functools.partial(on_pick, parent=root))
     canvas5 = FigureCanvasTkAgg(fig5, master=frame5)
     canvas5.draw()
     canvas5.get_tk_widget().pack(side=tk.LEFT)
@@ -111,11 +126,13 @@ def create_gui():
     frame6 = tk.Frame(root)
     frame6.grid(row=2, column=3, padx=20, pady=20)
     fig6 = create_pie_chart('Piechart 4')
+    fig6.canvas.mpl_connect("pick_event", functools.partial(on_pick, parent=root))
     canvas6 = FigureCanvasTkAgg(fig6, master=frame6)
     canvas6.draw()
     canvas6.get_tk_widget().pack(side=tk.LEFT)
 
     root.mainloop()
+
 
 
 create_gui()
