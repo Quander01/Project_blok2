@@ -3,65 +3,83 @@ import functools
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Cursor
 import random
 import tkinter as tk
-from tkinter import ttk
 import matplotlib
-import numpy as np
 matplotlib.use("TkAgg")
 
+root = tk.Tk()
 
-# Function to create a pie chart with random data
-@functools.lru_cache(maxsize=None)
-def create_pie_chart(title):
+
+# function to open the info windows when clicking on charts
+def on_click(event):
+    print("you clicked")
+
+
+def on_enter(frame):
+
+    frame.config(bg='#c7d5e0')
+
+
+def on_leave(frame):
+    frame.config(bg='#232323')
+
+
+# Function to create a pie chart
+def create_pie_chart(title, axis, data):
     plt.rcParams['text.color'] = '#c7d5e0'
     fig = Figure(facecolor='#2a475e')
     ax = fig.add_subplot(111)
     ax.set_facecolor('#232323')
     ax.set_title(title)
-    labels = ['A', 'B', 'C', 'D', 'E']
-    values = [random.randint(1, 100) for x in range(5)]
+    labels = axis
+    values = data
     plt.style.use('dark_background')
     ax.pie(values, labels=labels, colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'])
     return fig
 
+
 # Function to create a bar chart with random data
-@functools.lru_cache(maxsize=None)
-def create_bar_chart(title):
+def create_bar_chart(title, axis, data):
     plt.rcParams['text.color'] = '#c7d5e0'
     fig = Figure(facecolor='#2a475e')
     ax = fig.add_subplot(111)
     ax.set_facecolor('#232323')
-    x_values = range(1, 11)
-    y_values = [random.randint(1, 100) for x in range(1, 11)]
+    x_values = axis
+    y_values = data
     ax.bar(x_values, y_values)
     ax.set_title(title)
     return fig
 
 
-def on_pick(event, wedges):
-    if event.artist in wedges[0]:
-        # Open a smaller detail window over the root window
-        detail_window = tk.Toplevel()
-        detail_window.geometry("200x200")
-        detail_window.title("Detail")
-        detail_label = tk.Label(detail_window, text="This is a detail window")
-        detail_label.pack()
+def initiate_pie_chart(title, plot_data, axis_titles, frame):
+    # Create all 6 data frames and fill them with graphs
+    print(title, plot_data, axis_titles, frame)
+    fig = create_pie_chart(title, axis_titles, plot_data)
+    fig.canvas.mpl_connect('button_press_event', on_click)
+    canvas = FigureCanvasTkAgg(fig, master=frame)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
 
-def create_gui():
-    # Create root frame
-    root = tk.Tk()
+def initiate_bar_chart(title, plot_data, axis_titles, frame):
+    print(title, plot_data, axis_titles, frame)
+    fig = create_bar_chart(title, axis_titles, plot_data)
+    fig.canvas.mpl_connect('button_press_event', on_click)
+    canvas = FigureCanvasTkAgg(fig, master=frame)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.LEFT)
+
+
+def gui():
     root.title("Steam dashboard")
     root.configure(bg='#1b2838')
-
     # Create a frame for the top bar with a title
     top_bar = tk.Frame(root, bg='#1e1e1e', height=50)
     top_bar.grid(row=0, column=1, columnspan=4, sticky="we")
     top_bar.grid_columnconfigure(2, weight=1)
 
-    title_label = tk.Label(top_bar, text="Steam Dashboard", font=("Helvetica", 16), fg="white", bg='#1e1e1e', anchor=tk.CENTER)
+    title_label = tk.Label(top_bar, text="Steam Dashboard", font=("Arial", 16), fg="white", bg='#1e1e1e', anchor=tk.CENTER)
     title_label.grid(row=0, column=2, pady=5)
 
     # Create a bar next to the top bar with 'Friends'
@@ -82,57 +100,35 @@ def create_gui():
     listbox.pack(side='left', fill='y')
     for i in range(10):
         listbox.insert(tk.END, f'Friend {i + 1}')
+    frames()
 
 
-    # Create all 6 data frames and fill them with graphs
+def frames():
     frame1 = tk.Frame(root)
     frame1.grid(row=1, column=1, padx=20, pady=20)
-    fig1 = create_pie_chart('Piechart 1')
-    fig1.canvas.mpl_connect("pick_event", functools.partial(on_pick, parent=root))
-    canvas1 = FigureCanvasTkAgg(fig1, master=frame1)
-    canvas1.draw()
-    canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    initiate_pie_chart("test", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame1)
+
 
     frame2 = tk.Frame(root)
     frame2.grid(row=1, column=2, padx=20, pady=20)
-    fig2 = create_bar_chart('Barchart 1')
-    canvas2 = FigureCanvasTkAgg(fig2, master=frame2)
-    canvas2.draw()
-    canvas2.get_tk_widget().pack(side=tk.LEFT)
+    initiate_bar_chart("test2", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame2)
 
     frame3 = tk.Frame(root)
     frame3.grid(row=1, column=3, padx=20, pady=20)
-    fig3 = create_bar_chart('Barchart 2')
-    canvas3 = FigureCanvasTkAgg(fig3, master=frame3)
-    canvas3.draw()
-    canvas3.get_tk_widget().pack(side=tk.LEFT)
+    initiate_bar_chart("test3", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame3)
 
     frame4 = tk.Frame(root)
     frame4.grid(row=2, column=1, padx=20, pady=20)
-    fig4 = create_pie_chart('piechart 2')
-    fig4.canvas.mpl_connect("pick_event", functools.partial(on_pick, parent=root))
-    canvas4 = FigureCanvasTkAgg(fig4, master=frame4)
-    canvas4.draw()
-    canvas4.get_tk_widget().pack(side=tk.LEFT)
+    initiate_pie_chart("test4", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame4)
 
     frame5 = tk.Frame(root)
     frame5.grid(row=2, column=2, padx=20, pady=20)
-    fig5 = create_pie_chart('Piechart 3')
-    fig5.canvas.mpl_connect("pick_event", functools.partial(on_pick, parent=root))
-    canvas5 = FigureCanvasTkAgg(fig5, master=frame5)
-    canvas5.draw()
-    canvas5.get_tk_widget().pack(side=tk.LEFT)
+    initiate_pie_chart("test5", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame5)
 
     frame6 = tk.Frame(root)
     frame6.grid(row=2, column=3, padx=20, pady=20)
-    fig6 = create_pie_chart('Piechart 4')
-    fig6.canvas.mpl_connect("pick_event", functools.partial(on_pick, parent=root))
-    canvas6 = FigureCanvasTkAgg(fig6, master=frame6)
-    canvas6.draw()
-    canvas6.get_tk_widget().pack(side=tk.LEFT)
-
-    root.mainloop()
+    initiate_pie_chart("test6", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame6)
 
 
-
-create_gui()
+gui()
+root.mainloop()
