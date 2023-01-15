@@ -11,20 +11,20 @@ root = tk.Tk()
 
 
 # function to open the info windows when clicking on charts
-def on_click(event):
+def on_click(fig, event):
     print("you clicked")
 
 
 # register when the cursor enters the chart area and change the colour
-def on_enter(fig, event):
-    print("hi")
-    fig.set_facecolor('#c7d5e0')
+def on_enter(fig, canvas, event):
+    fig.set_facecolor('#66c0f4')
+    canvas.draw()
 
 
 # register when the cursor leaves the chart area and change the colour back accordingly
-def on_leave(fig, event):
-    print("bye")
-    fig.set_facecolor('#232323')
+def on_leave(fig, canvas, event):
+    fig.set_facecolor('#2a475e')
+    canvas.draw()
 
 
 # Function to create a pie chart
@@ -56,25 +56,22 @@ def create_bar_chart(title, axis, data):
 
 # send the data to the piechart creator and configure the returned chart
 def initiate_pie_chart(title, plot_data, axis_titles, frame):
-    # Create all 6 data frames and fill them with graphs
-    print(title, plot_data, axis_titles, frame)
     fig = create_pie_chart(title, axis_titles, plot_data)
-    fig.canvas.mpl_connect('button_press_event', on_click)
+    fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig))
     canvas = FigureCanvasTkAgg(fig, master=frame)
-    canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig))
-    canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig))
+    canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
+    canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
     canvas.draw()
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
 
 # send the data to the barchart creator and configure the returned chart
 def initiate_bar_chart(title, plot_data, axis_titles, frame):
-    print(title, plot_data, axis_titles, frame)
     fig = create_bar_chart(title, axis_titles, plot_data)
     fig.canvas.mpl_connect('button_press_event', on_click)
     canvas = FigureCanvasTkAgg(fig, master=frame)
-    canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig))
-    canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig))
+    canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
+    canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
     canvas.draw()
     canvas.get_tk_widget().pack(side=tk.LEFT)
 
@@ -83,6 +80,9 @@ def initiate_bar_chart(title, plot_data, axis_titles, frame):
 def gui():
     root.title("Steam dashboard")
     root.configure(bg='#1b2838')
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(1, weight=1)
+
     # Create a frame for the top bar with a title
     top_bar = tk.Frame(root, bg='#1e1e1e', height=50)
     top_bar.grid(row=0, column=1, columnspan=4, sticky="we")
