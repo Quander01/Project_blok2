@@ -3,7 +3,6 @@ import functools
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-import random
 import tkinter as tk
 import matplotlib
 matplotlib.use("TkAgg")
@@ -16,13 +15,16 @@ def on_click(event):
     print("you clicked")
 
 
-def on_enter(frame):
+# register when the cursor enters the chart area and change the colour
+def on_enter(fig, event):
+    print("hi")
+    fig.set_facecolor('#c7d5e0')
 
-    frame.config(bg='#c7d5e0')
 
-
-def on_leave(frame):
-    frame.config(bg='#232323')
+# register when the cursor leaves the chart area and change the colour back accordingly
+def on_leave(fig, event):
+    print("bye")
+    fig.set_facecolor('#232323')
 
 
 # Function to create a pie chart
@@ -39,7 +41,7 @@ def create_pie_chart(title, axis, data):
     return fig
 
 
-# Function to create a bar chart with random data
+# Function to create a bar chart
 def create_bar_chart(title, axis, data):
     plt.rcParams['text.color'] = '#c7d5e0'
     fig = Figure(facecolor='#2a475e')
@@ -52,25 +54,32 @@ def create_bar_chart(title, axis, data):
     return fig
 
 
+# send the data to the piechart creator and configure the returned chart
 def initiate_pie_chart(title, plot_data, axis_titles, frame):
     # Create all 6 data frames and fill them with graphs
     print(title, plot_data, axis_titles, frame)
     fig = create_pie_chart(title, axis_titles, plot_data)
     fig.canvas.mpl_connect('button_press_event', on_click)
     canvas = FigureCanvasTkAgg(fig, master=frame)
+    canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig))
+    canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig))
     canvas.draw()
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
 
+# send the data to the barchart creator and configure the returned chart
 def initiate_bar_chart(title, plot_data, axis_titles, frame):
     print(title, plot_data, axis_titles, frame)
     fig = create_bar_chart(title, axis_titles, plot_data)
     fig.canvas.mpl_connect('button_press_event', on_click)
     canvas = FigureCanvasTkAgg(fig, master=frame)
+    canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig))
+    canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig))
     canvas.draw()
     canvas.get_tk_widget().pack(side=tk.LEFT)
 
 
+# make the gui frames and anything that does not change
 def gui():
     root.title("Steam dashboard")
     root.configure(bg='#1b2838')
@@ -87,7 +96,7 @@ def gui():
     friend_bar.grid(row=0, column=0, columnspan=1, sticky="we")
     friend_bar.grid_columnconfigure(2, weight=1)
 
-    friend_label = tk.Label(friend_bar, text="Friends", font=("Helvetica", 16), fg="white", bg='#1e1e1e', anchor=tk.CENTER)
+    friend_label = tk.Label(friend_bar, text="Friends", font=("Arial", 16), fg="white", bg='#1e1e1e', anchor=tk.CENTER)
     friend_label.grid(row=0, column=2, pady=5)
 
     # Create a frame for the listbox
@@ -103,11 +112,11 @@ def gui():
     frames()
 
 
+# here the frames are called and given data
 def frames():
     frame1 = tk.Frame(root)
     frame1.grid(row=1, column=1, padx=20, pady=20)
     initiate_pie_chart("test", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame1)
-
 
     frame2 = tk.Frame(root)
     frame2.grid(row=1, column=2, padx=20, pady=20)
