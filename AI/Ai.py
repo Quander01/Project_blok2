@@ -221,7 +221,6 @@ print(flipIDData(games2Weeks(steamId)))
 print(ownedGames(steamId))
 print(flipIDData(ownedGames(steamId)))
 #print(newsJson) skip?
-#print(achJson)  skip?
 print(sumJson)
 #print(plyAch) basically same als onder maar met unlocktime, willen we dat?
 #print(stats)
