@@ -167,6 +167,40 @@ def friendlistData(steamId):
         frnDic = {}
     return frnDic
 
+def sortedFriends(steamId, key):
+    """
+    Returned vriendenlijst op of alfabetische volgorde, of op id
+    :param steamId:
+    :param key: 0 of 1: 0 staat voor alfabetisch 1 staat voor op id
+    :return:
+    Een gesorteerde lijst met namen of id's
+    """
+    try:
+        dic = friendlistData(steamId)
+        lst = []
+        lstIndexDic = {}
+        lstLowerIndexDic = {}
+        index = 0
+        srtLst = []
+        if key == 0:
+            for name in dic.values():
+                lst.append(name['name'].lower())
+                lstIndexDic[index] = name['name']
+                lstLowerIndexDic[name['name'].lower()] = index
+                index += 1
+            srtLstLower = mergeSort(lst)
+            for name in srtLstLower:
+                srtLst.append(lstIndexDic[lstLowerIndexDic[name]])
+        elif key == 1:
+            for id in dic.keys():
+                lst.append(id)
+            srtLst = mergeSort(lst)
+
+    except:
+        pass
+
+    return srtLst
+
 def flipIDData(dic):
     """
     Flipt een dictionary mocht het handig zijn om te sorteren op alfabetische volgorde ipv id's
@@ -289,7 +323,7 @@ def recentGamesAchievements(steamId, appId):
 
     return recAchDic
 
-print(datetime.utcfromtimestamp(1284101485).strftime('%Y-%m-%d %H:%M:%S'))  #https://stackoverflow.com/questions/3682748/converting-unix-timestamp-string-to-readable-date
+
 print(friendlistData(steamId))
 print(flipIDData(friendlistData(steamId)))
 print(games2Weeks(steamId))
@@ -298,5 +332,6 @@ print(ownedGames(steamId))
 print(flipIDData(ownedGames(steamId)))
 print(allAchievements(steamId,appId))
 print(recentGamesAchievements(steamId, appId))
-print(bigToSmallSort([1,3,5,2,4,6,53,3,3,6,3,2,4,4,5,5,55]))
+print(sortedFriends(steamId, 0))
+print(sortedFriends(steamId, 1))
 #1145360 Hades
