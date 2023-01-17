@@ -8,16 +8,20 @@ matplotlib.use("TkAgg")
 
 root = tk.Tk()
 screen_height = int((root.winfo_screenheight())/1.5)
-root.geometry("{}x{}".format(int(screen_height*16/9), screen_height))
+screen_width = int(screen_height*16/9)
+print(screen_height)
+root.geometry("{}x{}".format(screen_width, screen_height))
+print("{}x{}".format(int(screen_height*16/9), screen_height))
 text_colour = '#c7d5e0' #slightly blue white-ish
 background_colour = '#1b2838' #steam dark blue
 figure_colour = '#2a475e' #steam blue
 backboard_colour = '#232323' #steam dark grey
 highlight_colour = '#66c0f4' #steam light blue
-graph_frame_padx = 10
-graph_frame_pady = 10
+graph_frame_padx = screen_width/170.6
+graph_frame_pady = screen_height/96
 general_font = 'Arial'
 plt.rcParams['text.color'] = text_colour
+px = 1/plt.rcParams['figure.dpi']
 
 # Function to open the info windows when clicking on charts
 # Only returns "you clicked on..." for now
@@ -53,7 +57,7 @@ def find_friends(friends_list):
 # It creates and returns a pie chart using the matplotlib library.
 def create_chart(title, axis, data, chart_type, subplots=111):
     plt.rcParams['text.color'] = text_colour
-    fig = Figure(facecolor=figure_colour, figsize=(4.5, 3.5))
+    fig = Figure(facecolor=figure_colour, figsize=(screen_width/3.8*px, screen_height/2.7*px))
     if chart_type == "progress":
         ax = fig.add_subplot(subplots)
     else:
@@ -140,7 +144,7 @@ def gui():
     title_bar.grid_columnconfigure(2, weight=1)
 
     title_label = tk.Label(title_bar, text="Steam Dashboard", font=(general_font, 30), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER)
-    title_label.grid(row=0, column=2, pady=50)
+    title_label.grid(row=0, column=2, pady=screen_height/19.2)
 
     # PROFILE BUTTON
     profile_bar = tk.Frame(root, bg=backboard_colour)
@@ -151,7 +155,7 @@ def gui():
 
     # FRIENDS LIST
     listbox_frame = tk.Frame(root, bg=backboard_colour)
-    listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news', padx=15)
+    listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news', padx=screen_width/113)
 
     friends_list = tk.Listbox(listbox_frame, bg=backboard_colour, fg=text_colour, selectmode='single', font=(general_font, 17), selectbackground=highlight_colour, selectforeground='Black', activestyle='none')
     friends_list.config(highlightthickness=0)
