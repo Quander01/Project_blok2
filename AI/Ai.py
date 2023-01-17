@@ -269,6 +269,7 @@ def allAchievements(steamId, appId):
     :return:
     """
     achDic = {}
+    achDicStats = {}
     #Is een profiel prive dan zal er een foutmelding komen
     try:
         playerAchievements = requests.get(
@@ -323,15 +324,41 @@ def recentGamesAchievements(steamId, appId):
 
     return recAchDic
 
+def frequencyGamesAllFriends(steamId):
+    """
+    Telt hoeveel van je vrienden welke games deelt met jou
+    :param steamId: steamId van user
+    :return:
+    dictionary met twee gesorteerde lijsten. Lijst met namen en frequenties
+    """
+    friendsDic = friendlistData(steamId)
+    lstAllName = []
+    for id in friendsDic.keys():
+        ownGamDic = ownedGames(id)
+        if len(ownGamDic) != 0:
+            for name in ownGamDic.values():
+                lstAllName.append(name['name'])
 
-print(friendlistData(steamId))
-print(flipIDData(friendlistData(steamId)))
-print(games2Weeks(steamId))
-print(flipIDData(games2Weeks(steamId)))
-print(ownedGames(steamId))
-print(flipIDData(ownedGames(steamId)))
-print(allAchievements(steamId,appId))
-print(recentGamesAchievements(steamId, appId))
-print(sortedFriends(steamId, 0))
-print(sortedFriends(steamId, 1))
+    freqDic = freq(lstAllName)
+
+    ciDqerf = {}
+    for name, frequency in freqDic.items():
+        ciDqerf[frequency] , name = name, frequency
+
+    frequencies = []
+    for fre in ciDqerf:
+        frequencies.append(fre)
+    stbFre = mergeSort(frequencies)
+    btsFre = bigToSmallSort(stbFre)
+
+    names = []
+    for frec in btsFre[:11]:
+        names.append(ciDqerf[frec])
+
+    top10MostPlayed = {'name': names, 'frequency': btsFre[:11]}
+    return top10MostPlayed
+
+print(frequencyGamesAllFriends(steamId))
+
+
 #1145360 Hades
