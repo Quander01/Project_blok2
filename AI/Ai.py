@@ -177,7 +177,7 @@ def friendlistData(steamId):
         friendsJson = request.json()
         frnDic = {}
         for friend in friendsJson['response']['players']:
-            frnDic[friend['steamid']] = {'name': friend['personaname']}
+            frnDic[friend['steamid']] = {'name': friend['personaname'], 'avatar':friend['avatarmedium']}
     except:     #Is de profiel prive, dan is de dictionary leeg
         frnDic = {}
     return frnDic
