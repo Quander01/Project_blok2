@@ -24,7 +24,6 @@ oGa = ownedGames.json()
 def mergeSort(lst):
     """
     Sorteer functie met behulp van de divide en conquer methode.
-
     Args:
         lst(list): Een lijst met getallen.
     Returns:
@@ -49,7 +48,6 @@ def merge(lstA, lstB):
     Deze functie zorgt voor het sorteren en mergen van de lijsten.
     Het principe van deze functie is dat de functie al gedeeltelijk gesorteerde lijsten binnen krijgt.
     Hierdoor is de vergelijking alleen nodig voor de eerste index.
-
     :param lstA (list): lijst met getallen
     :param lstB (list): lijst met getallen
     :return: list: De gemerged en gesorteerde lijst van de twee parameters
@@ -113,11 +111,9 @@ def freq(lst):
 def binary_search_index(lst, target):
     """
     Bepaal de positie van gegeven element in de lijst volgens het binair zoekalgoritme.
-
     Args:
         lst (list): Een lijst met elementen van gelijk type, bijvoorbeeld gehele getallen.
         target (int): Een gezocht element.
-
     Returns:
         int: De index waar het element in de lijst staat, of -1 als het element niet in de lijst voorkomt.
     """
@@ -151,7 +147,6 @@ def friendlistData(steamId):
     wordt verwerkt in een dictionary.
     Args:
         steamid: steamId van de gevraagde user
-
     Returns:
     Een dictionary van alle vrienden met de steamid als de key en de naam als waarde
     """
@@ -185,10 +180,8 @@ def friendlistData(steamId):
 def flipIDData(dic):
     """
     Flipt een dictionary mocht het handig zijn om te sorteren op alfabetische volgorde ipv id's
-
     Args:
         dic: Dictionary met id als key en naam als waarde
-
     Returns:
     De geflipte dictionary
     """
@@ -202,7 +195,6 @@ def games2Weeks(steamId):
     Zoekt op wat de laatste games zijn die de user heeft gespeeld afgelopen twee weken
     Args:
         steamId: Steamid van gevraagde user
-
     Returns:
     Een dictionary met de id van de game als key en naam van de game als value
     """
@@ -226,7 +218,6 @@ def ownedGames(steamId):
     Pakt alle informatie over owned games
     Args:
         steamId: steamid van user
-
     Returns:
     Dictionary met id als key en data als value
     """
@@ -309,7 +300,7 @@ def recentGamesAchievements(steamId, appId):
 
     return recAchDic
 
-print(datetime.utcfromtimestamp(1284101485).strftime('%Y-%m-%d %H:%M:%S'))  #https://stackoverflow.com/questions/3682748/converting-unix-timestamp-string-to-readable-date
+'''print(datetime.utcfromtimestamp(1284101485).strftime('%Y-%m-%d %H:%M:%S'))  #https://stackoverflow.com/questions/3682748/converting-unix-timestamp-string-to-readable-date
 print(friendlistData(steamId))
 print(flipIDData(friendlistData(steamId)))
 print(games2Weeks(steamId))
@@ -319,14 +310,10 @@ print(flipIDData(ownedGames(steamId)))
 #print(newsJson) skip?
 print(achJson)
 print(sumJson)
-playerAchievements = requests.get(
-            f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
+playerAchievements = requests.get(f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
 plyAch = playerAchievements.json()
 print(plyAch)
 print(allAchievements(steamId,appId))
 print(recentGamesAchievements(steamId, appId))
 #1145360 Hades
-print(oGa)
-
-
-
+print(oGa)'''
