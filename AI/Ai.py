@@ -245,26 +245,24 @@ def allAchievements(steamId, appId):
     """
     achDic = {}
 
-    try:
+    try: #Is een profiel prive dan zal er een foutmelding komen
         playerAchievements = requests.get(
             f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
         plyAch = playerAchievements.json()
 
-        count = 0
+        tot = 0
         achieved = 0
         for achievement in plyAch['playerstats']['achievements']:
             achDic[achievement['apiname']] = {'achieved': achievement['achieved'], 'unlocktime': achievement['unlocktime']}
             if achievement['achieved']:
                 achieved += 1
-            count += 1
-        achDic['achCount'] = count          #Aantal achievements
-        achDic['achAchieved'] = achieved    #Aantal behaalde achievements
-        achDic['achProcent'] = (achieved/count) * 100 #Percentage achievements
+            tot += 1
+        achDicStats = {'achTot': tot, 'achAchieved': achieved, 'achprocent': (achieved/tot) * 100, 'achievements': achDic}
 
     except:
         pass
 
-    return achDic
+    return achDicStats
 def recentGamesAchievements(steamId, appId):
     """
     Returns the recently achieved achievements of a certain game
@@ -279,11 +277,8 @@ def recentGamesAchievements(steamId, appId):
         achDic = allAchievements(steamId, appId)
 
         ciDhca = {}
-        for name, data in achDic.items():
-            if type(data) == int or type(data) == float:
-                pass
-            else:
-                ciDhca[data['unlocktime']], data['unlocktime'] = data, name
+        for name, data in achDic['achievements'].items():
+            ciDhca[data['unlocktime']], data['unlocktime'] = data, name
 
         times = []
         for time in ciDhca.keys():
@@ -291,16 +286,16 @@ def recentGamesAchievements(steamId, appId):
         recUnlockTime = bigToSmallSort(times)
 
         recAch = []
-        for time in recUnlockTime[:11]:
+        for time in recUnlockTime[:4]:
             recAch.append(ciDhca[time]['unlocktime'])
 
-        recAchDic = {'time': recUnlockTime[:11], 'name': recAch}
+        recAchDic = {'time': recUnlockTime[:4], 'name': recAch}
     except:
         pass
 
     return recAchDic
 
-'''print(datetime.utcfromtimestamp(1284101485).strftime('%Y-%m-%d %H:%M:%S'))  #https://stackoverflow.com/questions/3682748/converting-unix-timestamp-string-to-readable-date
+print(datetime.utcfromtimestamp(1284101485).strftime('%Y-%m-%d %H:%M:%S'))  #https://stackoverflow.com/questions/3682748/converting-unix-timestamp-string-to-readable-date
 print(friendlistData(steamId))
 print(flipIDData(friendlistData(steamId)))
 print(games2Weeks(steamId))
@@ -316,4 +311,4 @@ print(plyAch)
 print(allAchievements(steamId,appId))
 print(recentGamesAchievements(steamId, appId))
 #1145360 Hades
-print(oGa)'''
+print(oGa)
