@@ -1,11 +1,9 @@
 # import all bullshit
-import functools
+import functools, tkinter as tk, matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-import tkinter as tk
-import matplotlib
-from AI.Ai import *
+from AI import Ai
 matplotlib.use("TkAgg")
 
 root = tk.Tk()
@@ -17,7 +15,7 @@ highlight_colour = '#66c0f4' #steam light blue
 graph_frame_padx = 10
 graph_frame_pady = 10
 general_font = 'Arial'
-
+plt.rcParams['text.color'] = text_colour
 
 # Function to open the info windows when clicking on charts
 # Only returns "you clicked on..." for now
@@ -44,45 +42,32 @@ def show_profile():
 
 # Function takes in three parameters: title of the figure, axis names and data to display.
 # It creates and returns a pie chart using the matplotlib library.
-def create_pie_chart(title, axis, data):
+def create_chart(title, axis, data, chart_type, subplots=111):
     plt.rcParams['text.color'] = text_colour
     fig = Figure(facecolor=figure_colour, figsize=(4, 3))
-    ax = fig.add_subplot(111)
+    if chart_type == "progress":
+        ax = fig.add_subplot(subplots)
+    else:
+        ax = fig.add_subplot(111)
     ax.set_facecolor(backboard_colour)
     ax.set_title(title)
-    labels = axis
-    values = data
-    plt.style.use('dark_background')
-    ax.pie(values, labels=labels, colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'])
-    return fig
 
-
-# Function takes in three parameters: title of the figure, axis names and data to display.
-# It creates and returns a bar chart using the matplotlib library.
-def create_bar_chart(title, axis, data):
-    plt.rcParams['text.color'] = text_colour
-    fig = Figure(facecolor=figure_colour, figsize=(4, 3))
-    ax = fig.add_subplot(111)
-    ax.set_facecolor(backboard_colour)
-    x_values = axis
-    y_values = data
-    ax.bar(x_values, y_values)
-    ax.set_title(title)
-    return fig
-
-
-# Function takes in two parameters: title of the figure and percentage of the progress bar.
-# It creates and returns a progress bar using the matplotlib library.
-def create_progress_bar(title,  percentage):
-    plt.rcParams['text.color'] = text_colour
-    fig = Figure(facecolor=figure_colour, figsize=(4, 3))
-    ax = fig.add_subplot(513)
-    ax.set_facecolor(backboard_colour)
-    ax.set_xlim([0, 100])
-    ax.set_yticks([])
-    rect = plt.Rectangle((0, 0), percentage, 1, color=highlight_colour)
-    ax.add_patch(rect)
-    ax.set_title(title)
+    if chart_type == "pie":
+        labels = axis
+        values = data
+        plt.style.use('dark_background')
+        ax.pie(values, labels=labels, colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'])
+    elif chart_type == "bar":
+        x_values = axis
+        y_values = data
+        ax.bar(x_values, y_values)
+    elif chart_type == "progress":
+        ax.set_xlim([0, 100])
+        ax.set_yticks([])
+        rect = plt.Rectangle((0, 0), data, 1, color=highlight_colour)
+        ax.add_patch(rect)
+    else:
+        raise ValueError("Invalid chart type")
     return fig
 
 
@@ -91,7 +76,7 @@ def create_progress_bar(title,  percentage):
 # Assigns usage of on_click and mouseover functions
 # Then draws the canvas
 def initiate_pie_chart(title, plot_data, axis_titles, frame):
-    fig = create_pie_chart(title, axis_titles, plot_data)
+    fig = create_chart(title, axis_titles, plot_data, "pie")
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
     canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
@@ -106,7 +91,7 @@ def initiate_pie_chart(title, plot_data, axis_titles, frame):
 # Assigns usage of on_click and mouseover functions
 # Then draws the canvas
 def initiate_bar_chart(title, plot_data, axis_titles, frame):
-    fig = create_bar_chart(title, axis_titles, plot_data)
+    fig = create_chart(title, axis_titles, plot_data, "bar")
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
     canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
@@ -121,7 +106,7 @@ def initiate_bar_chart(title, plot_data, axis_titles, frame):
 # Assigns usage of on_click and mouseover functions
 # Then draws the canvas
 def initiate_progress_bar(title, percentage, frame):
-    fig = create_progress_bar(title, percentage)
+    fig = create_chart(title,'NONE', percentage, "progress", 513)
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
     canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
@@ -138,6 +123,8 @@ def gui():
     root.columnconfigure(0, weight=1)
     root.rowconfigure(1, weight=1)
     root.resizable(False, False)
+    root.columnconfigure(0, weight=1, minsize=340)
+
 
     top_bar = tk.Frame(root, bg=backboard_colour)
     top_bar.grid(row=0, column=1, columnspan=3, sticky="wsne")
