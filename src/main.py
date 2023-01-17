@@ -41,12 +41,13 @@ def show_profile():
     print('you clicked on the profile button')
     return
 
-def find_friends(friends_list):
-    print('you tried to find friends, poor you')
-    for i in range(10):
-        friends_list.insert(tk.END, f'Friend {i + 1}')
 
+def find_friends(friends_list):
+    friends_dict = Ai.friendlistData(Ai.steamId)
+    for i in friends_dict:
+        friends_list.insert(tk.END, friends_dict[i]['name'])
     return
+
 
 # Function takes in three parameters: title of the figure, axis names and data to display.
 # It creates and returns a pie chart using the matplotlib library.
@@ -129,22 +130,26 @@ def gui():
     root.title("Steam dashboard")
     root.configure(bg=background_colour)
     root.resizable(False, False)
-    root.grid_columnconfigure(0, weight=1)
-    root.grid_rowconfigure(0, weight=1)
+    for i in range(4):
+        root.grid_columnconfigure(i, weight=1)
+        root.grid_rowconfigure(i, weight=1)
 
-    top_bar = tk.Frame(root, bg=backboard_colour)
-    top_bar.grid(row=0, column=1, columnspan=3, sticky="wsne")
-    top_bar.grid_columnconfigure(2, weight=1)
+    # TITLE BAR
+    title_bar = tk.Frame(root, bg=backboard_colour)
+    title_bar.grid(row=0, column=1, columnspan=3, sticky="wsne")
+    title_bar.grid_columnconfigure(2, weight=1)
 
-    title_label = tk.Label(top_bar, text="Steam Dashboard", font=(general_font, 30), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER)
+    title_label = tk.Label(title_bar, text="Steam Dashboard", font=(general_font, 30), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER)
     title_label.grid(row=0, column=2, pady=50)
 
+    # PROFILE BUTTON
     profile_bar = tk.Frame(root, bg=backboard_colour)
     profile_bar.grid(row=0, column=0, columnspan=1, rowspan=6, sticky="news")
 
-    profile_button = tk.Button(profile_bar, text="Profile", font=(general_font, 18), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER, command=show_profile)
-    profile_button.grid(row=0, column=0, columnspan=1, sticky="news")
+    profile_button = tk.Button(profile_bar, text="Profile", font=(general_font, 18), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER, command=show_profile, height=5)
+    profile_button.grid(sticky="news")
 
+    # FRIENDS LIST
     listbox_frame = tk.Frame(root, bg=backboard_colour)
     listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news', padx=15)
 
@@ -155,10 +160,11 @@ def gui():
     listbox_width = friends_list.cget("width")
     profile_button.config(width=listbox_width)
 
-    under_frame = tk.Frame(root, bg=backboard_colour,)
-    under_frame.grid(row=4, column=1, columnspan=3, sticky='news')
+    # BOTTOM FRAME
+    bottom_frame = tk.Frame(root, bg=backboard_colour,)
+    bottom_frame.grid(row=4, column=1, columnspan=3, sticky='news')
 
-    under_text = tk.Label(under_frame, text='hello there', bg=backboard_colour, fg=text_colour, font=(general_font, 20))
+    under_text = tk.Label(bottom_frame, text='hello there', bg=backboard_colour, fg=text_colour, font=(general_font, 20))
     under_text.pack(side='left')
     frames()
 
