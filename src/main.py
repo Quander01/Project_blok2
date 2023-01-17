@@ -178,7 +178,8 @@ def gui():
 def frames():
     # IMPORTS
     recent_playtime = Ai.games2Weeks(Ai.steamId)
-    achievements = Ai.allAchievements(Ai.steamId, 1920480)
+    print(recent_playtime)
+    achievements = Ai.allAchievements(Ai.steamId, 431960)
     print(achievements)
 
     # FRAME 1
@@ -212,9 +213,10 @@ def frames():
     initiate_pie_chart("pie chart demo 3", (1, 2, 5, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame5)
 
     # FRAME 6
+    ach_percentage = achievements['achprocent']
     frame6 = tk.Frame(root)
     frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-    initiate_progress_bar("progress bar demo", 23, frame6)
+    initiate_progress_bar("achievement % for " + recent_playtime[431960]['name'], ach_percentage, frame6)
 
 
 gui()
