@@ -4,20 +4,26 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from AI import Ai
+from webbrowser import open
 matplotlib.use("TkAgg")
 
 root = tk.Tk()
 screen_height = int((root.winfo_screenheight())/1.5)
-root.geometry("{}x{}".format(int(screen_height*16/9), screen_height))
-text_colour = '#c7d5e0' #slightly blue white-ish
-background_colour = '#1b2838' #steam dark blue
-figure_colour = '#2a475e' #steam blue
-backboard_colour = '#232323' #steam dark grey
-highlight_colour = '#66c0f4' #steam light blue
-graph_frame_padx = 10
-graph_frame_pady = 10
+screen_width = int(screen_height*16/9)
+print(screen_height)
+root.geometry("{}x{}".format(screen_width, screen_height))
+print("{}x{}".format(int(screen_height*16/9), screen_height))
+text_colour = '#c7d5e0'                                         # slightly blue white-ish
+background_colour = '#1b2838'                                   # steam dark blue
+figure_colour = '#2a475e'                                       # steam blue
+backboard_colour = '#232323'                                    # steam dark grey
+highlight_colour = '#66c0f4'                                    # steam light blue
+graph_frame_padx = screen_width/170.6
+graph_frame_pady = screen_height/96
 general_font = 'Arial'
 plt.rcParams['text.color'] = text_colour
+px = 1/plt.rcParams['figure.dpi']
+
 
 # Function to open the info windows when clicking on charts
 # Only returns "you clicked on..." for now
@@ -38,7 +44,7 @@ def on_leave(fig, canvas, event):
 
 
 def show_profile():
-    print('you clicked on the profile button')
+    open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
     return
 
 
@@ -53,14 +59,13 @@ def find_friends(friends_list):
 # It creates and returns a pie chart using the matplotlib library.
 def create_chart(title, axis, data, chart_type, subplots=111):
     plt.rcParams['text.color'] = text_colour
-    fig = Figure(facecolor=figure_colour, figsize=(4.5, 3.5))
+    fig = Figure(facecolor=figure_colour, figsize=(screen_width/3.8*px, screen_height/2.7*px))
     if chart_type == "progress":
         ax = fig.add_subplot(subplots)
     else:
         ax = fig.add_subplot(111)
     ax.set_facecolor(backboard_colour)
     ax.set_title(title)
-
     if chart_type == "pie":
         labels = axis
         values = data
@@ -69,7 +74,8 @@ def create_chart(title, axis, data, chart_type, subplots=111):
     elif chart_type == "bar":
         x_values = axis
         y_values = data
-        ax.bar(x_values, y_values)
+        bars = ax.bar(x_values, y_values)
+        ax.bar_label(bars)
     elif chart_type == "progress":
         ax.set_xlim([0, 100])
         ax.set_yticks([])
@@ -140,25 +146,24 @@ def gui():
     title_bar.grid_columnconfigure(2, weight=1)
 
     title_label = tk.Label(title_bar, text="Steam Dashboard", font=(general_font, 30), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER)
-    title_label.grid(row=0, column=2, pady=50)
+    title_label.grid(row=0, column=2, pady=screen_height/19.2)
 
     # PROFILE BUTTON
     profile_bar = tk.Frame(root, bg=backboard_colour)
     profile_bar.grid(row=0, column=0, columnspan=1, rowspan=6, sticky="news")
 
-    profile_button = tk.Button(profile_bar, text="Profile", font=(general_font, 18), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER, command=show_profile, height=5)
+    profile_button = tk.Button(profile_bar, text="Profile", font=(general_font, 18), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER, command=show_profile, height=int(screen_height/192))
     profile_button.grid(sticky="news")
 
     # FRIENDS LIST
     listbox_frame = tk.Frame(root, bg=backboard_colour)
-    listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news', padx=15)
+    listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news', padx=screen_width/113)
 
     friends_list = tk.Listbox(listbox_frame, bg=backboard_colour, fg=text_colour, selectmode='single', font=(general_font, 17), selectbackground=highlight_colour, selectforeground='Black', activestyle='none')
-    friends_list.config(highlightthickness=0)
+    friends_list.config(highlightthickness=0, width=0)
     friends_list.pack(side='left', fill='y')
     find_friends(friends_list)
-    listbox_width = friends_list.cget("width")
-    profile_button.config(width=listbox_width)
+    profile_button.config(width=int(screen_width/85.3))
 
     # BOTTOM FRAME
     bottom_frame = tk.Frame(root, bg=backboard_colour,)
@@ -171,26 +176,42 @@ def gui():
 
 # Graph frames are created and data sent to the initiators
 def frames():
+    # IMPORTS
+    recent_playtime = Ai.games2Weeks(Ai.steamId)
+    achievements = Ai.allAchievements(Ai.steamId, 1920480)
+    print(achievements)
+
+    # FRAME 1
     frame1 = tk.Frame(root)
     frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
     initiate_pie_chart("pie chart demo 1", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame1)
 
+    # FRAME 2
+    xaxis_2weeks = []
+    yaxis_2weeks = []
+    for i in recent_playtime:
+        xaxis_2weeks.append(recent_playtime[i]['name'])
+        yaxis_2weeks.append(recent_playtime[i]['playtime_2weeks'])
     frame2 = tk.Frame(root)
     frame2.grid(row=2, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-    initiate_bar_chart("bar chart demo 1", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame2)
+    initiate_bar_chart("Your recent playtime (minutes)", yaxis_2weeks, xaxis_2weeks, frame2)
 
+    # FRAME 3
     frame3 = tk.Frame(root)
     frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
     initiate_bar_chart("bar chart demo 2", (3, 2, 3, 4, 3), ('A', 'B', 'C', 'D', 'E'), frame3)
 
+    # FRAME 4
     frame4 = tk.Frame(root)
     frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
     initiate_pie_chart("pie chart demo 2", (4, 2, 4, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame4)
 
+    # FRAME 5
     frame5 = tk.Frame(root)
     frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
     initiate_pie_chart("pie chart demo 3", (1, 2, 5, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame5)
 
+    # FRAME 6
     frame6 = tk.Frame(root)
     frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
     initiate_progress_bar("progress bar demo", 23, frame6)
