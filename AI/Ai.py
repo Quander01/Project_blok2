@@ -7,22 +7,20 @@ appId = '367520'
 
 # news = requests.get(f'http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={appId}&count=3&maxlength=300&format=json')
 # newsJson = news.json()
-#
-# achievements = requests.get(f'http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid={appId}&format=json')
-# achJson = achievements.json()
-#
+
+achievements = requests.get(f'http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid={appId}&format=json')
+achJson = achievements.json()
+
 playerSum = requests.get(f'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={steamId}')
 sumJson = playerSum.json()
-#
+
 # playerAchievements = requests.get(f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
 # plyAch = playerAchievements.json()
-#
-# userStats = requests.get(f'http://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0002/?appid={appId}&key={key}&steamid={steamId}')
-# stats = userStats.json()
-#
+
 ownedGames = requests.get(f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={key}&steamid={steamId}&format=json&include_appinfo=True&include_played_free_games=True')
 oGa = ownedGames.json()
 
+#Algemene statistiek functies______________________________________
 def mergeSort(lst):
     """
     Sorteer functie met behulp van de divide en conquer methode.
@@ -78,6 +76,40 @@ def merge(lstA, lstB):
 
     return lstC
 
+def bigToSmallSort(lst):
+    """
+    Sorteert op grootste waarde eerst naar kleinste
+    :param lst:
+    Te soorteren lijst
+    :return:
+    Gesoorterde lijst
+    """
+    revLst = mergeSort(lst)
+    revLst.reverse()
+    return revLst
+
+def freq(lst):
+    """
+    Bepaal de frequenties van alle getallen in een lijst.
+    Args:
+        lst (list): Een lijst met gehele getallen.
+    Returns:
+        dict: Een dictionary met als 'key' de waardes die voorkomen in de lijst
+            en als 'value' het aantal voorkomens (de frequentie) van die waarde.
+    Examples:
+        >> freq([0, 0, 4, 7, 7])
+        {0: 2, 4: 1, 7: 2}
+        >> freq([1, 1, 2, 3, 2, 1])
+        {1: 3, 2: 2, 3: 1}
+    """
+    freqs = {}
+    for getal in lst:                       #Een teller met behulp van een dictionary, met als getal de key en het aantal de value van de key
+        if getal not in freqs.keys():       #Als een waarde niet in de dictionary zit, wordt er een nieuwe key gemaakt met de getal
+            freqs[getal] = 1
+        else:                               #Als het er wel al in staat gaat de teller 1 omhoog
+            freqs[getal] += 1
+    return freqs
+
 def binary_search_index(lst, target):
     """
     Bepaal de positie van gegeven element in de lijst volgens het binair zoekalgoritme.
@@ -110,7 +142,7 @@ def binary_search_index(lst, target):
             found = True
     return foundIn
 
-
+#Specifieke methoden met API-calls_________________________________
 
 def friendlistData(steamId):
     """
@@ -118,8 +150,7 @@ def friendlistData(steamId):
     request voor alle vrienden van een bepaalde steam user. Deze informatie
     wordt verwerkt in een dictionary.
     Args:
-        key:
-        steamid:
+        steamid: steamId van de gevraagde user
 
     Returns:
     Een dictionary van alle vrienden met de steamid als de key en de naam als waarde
@@ -184,7 +215,7 @@ def games2Weeks(steamId):
 
         games2weeks = {}
         for game in recGa['response']['games']:
-            games2weeks[game['appid']] = {'name': game['name'], 'playtime': game['playtime_forever']}
+            games2weeks[game['appid']] = {'name': game['name'], 'playtime_2weeks': game['playtime_2weeks'], 'playtime': game['playtime_forever']}
 
     except: #Dus als het prive is dan geeft het een lege dictionary terug
         games2weeks = {}
@@ -213,6 +244,71 @@ def ownedGames(steamId):
         pass
     return oGaDic
 
+
+def allAchievements(steamId, appId):
+    """
+    Gets achievements data
+    :param steamId:
+    :param appId:
+    :return:
+    """
+    achDic = {}
+
+    try:
+        playerAchievements = requests.get(
+            f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
+        plyAch = playerAchievements.json()
+
+        count = 0
+        achieved = 0
+        for achievement in plyAch['playerstats']['achievements']:
+            achDic[achievement['apiname']] = {'achieved': achievement['achieved'], 'unlocktime': achievement['unlocktime']}
+            if achievement['achieved']:
+                achieved += 1
+            count += 1
+        achDic['achCount'] = count          #Aantal achievements
+        achDic['achAchieved'] = achieved    #Aantal behaalde achievements
+        achDic['achProcent'] = (achieved/count) * 100 #Percentage achievements
+
+    except:
+        pass
+
+    return achDic
+def recentGamesAchievements(steamId, appId):
+    """
+    Returns the recently achieved achievements of a certain game
+    :param steamId: steamid van user waarvan je info wil hebben
+    :param appId: appid van de app die gevraagd wordt
+    :return:
+    dictionary met twee lijsten
+    """
+    recAchDic = {}
+
+    try:
+        achDic = allAchievements(steamId, appId)
+
+        ciDhca = {}
+        for name, data in achDic.items():
+            if type(data) == int or type(data) == float:
+                pass
+            else:
+                ciDhca[data['unlocktime']], data['unlocktime'] = data, name
+
+        times = []
+        for time in ciDhca.keys():
+            times.append(time)
+        recUnlockTime = bigToSmallSort(times)
+
+        recAch = []
+        for time in recUnlockTime[:11]:
+            recAch.append(ciDhca[time]['unlocktime'])
+
+        recAchDic = {'time': recUnlockTime[:11], 'name': recAch}
+    except:
+        pass
+
+    return recAchDic
+
 print(datetime.utcfromtimestamp(1284101485).strftime('%Y-%m-%d %H:%M:%S'))  #https://stackoverflow.com/questions/3682748/converting-unix-timestamp-string-to-readable-date
 print(friendlistData(steamId))
 print(flipIDData(friendlistData(steamId)))
@@ -221,9 +317,15 @@ print(flipIDData(games2Weeks(steamId)))
 print(ownedGames(steamId))
 print(flipIDData(ownedGames(steamId)))
 #print(newsJson) skip?
+print(achJson)
 print(sumJson)
-#print(plyAch) basically same als onder maar met unlocktime, willen we dat?
-#print(stats)
+playerAchievements = requests.get(
+            f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
+plyAch = playerAchievements.json()
+print(plyAch)
+print(allAchievements(steamId,appId))
+print(recentGamesAchievements(steamId, appId))
+#1145360 Hades
 print(oGa)
 
 
