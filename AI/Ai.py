@@ -295,7 +295,7 @@ def recentGamesAchievements(steamId, appId):
 
     return recAchDic
 
-print(datetime.utcfromtimestamp(1284101485).strftime('%Y-%m-%d %H:%M:%S'))  #https://stackoverflow.com/questions/3682748/converting-unix-timestamp-string-to-readable-date
+'''print(datetime.utcfromtimestamp(1284101485).strftime('%Y-%m-%d %H:%M:%S'))  #https://stackoverflow.com/questions/3682748/converting-unix-timestamp-string-to-readable-date
 print(friendlistData(steamId))
 print(flipIDData(friendlistData(steamId)))
 print(games2Weeks(steamId))
@@ -311,4 +311,4 @@ print(plyAch)
 print(allAchievements(steamId,appId))
 print(recentGamesAchievements(steamId, appId))
 #1145360 Hades
-print(oGa)
+print(oGa)'''
