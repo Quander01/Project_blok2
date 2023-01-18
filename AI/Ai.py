@@ -5,21 +5,6 @@ key = '882B75E94431CD842CCD402F7E9C1A73'
 steamId = '76561198111929702'
 appId = '367520'
 
-# news = requests.get(f'http://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid={appId}&count=3&maxlength=300&format=json')
-# newsJson = news.json()
-
-achievements = requests.get(f'http://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid={appId}&format=json')
-achJson = achievements.json()
-
-playerSum = requests.get(f'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={steamId}')
-sumJson = playerSum.json()
-
-# playerAchievements = requests.get(f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
-# plyAch = playerAchievements.json()
-
-ownedGames = requests.get(f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={key}&steamid={steamId}&format=json&include_appinfo=True&include_played_free_games=True')
-oGa = ownedGames.json()
-
 #Algemene statistiek functies______________________________________
 def mergeSort(lst):
     """
@@ -82,8 +67,11 @@ def bigToSmallSort(lst):
     :return:
     Gesoorterde lijst
     """
-    revLst = mergeSort(lst)
-    revLst.reverse()
+    List = mergeSort(lst)
+    index = -1
+    revLst = []
+    for i in range(-1, -(len(List) + 1), -1):
+        revLst.append(List[i])
     return revLst
 
 def freq(lst):
@@ -173,9 +161,45 @@ def friendlistData(steamId):
         frnDic = {}
         for friend in friendsJson['response']['players']:
             frnDic[friend['steamid']] = {'name': friend['personaname'], 'avatar':friend['avatarmedium']}
-    except:     #Is de profiel prive, dan is de dictionary leeg
+
+    #Is de profiel prive, dan is de dictionary leeg
+    except:
         frnDic = {}
     return frnDic
+
+def sortedFriends(steamId, key):
+    """
+    Returned vriendenlijst op of alfabetische volgorde, of op id
+    :param steamId:
+    :param key: 0 of 1: 0 staat voor alfabetisch 1 staat voor op id
+    :return:
+    Een gesorteerde lijst met namen of id's
+    """
+    try:
+        dic = friendlistData(steamId)
+        lst = []
+        lstIndexDic = {}
+        lstLowerIndexDic = {}
+        index = 0
+        srtLst = []
+        if key == 0:
+            for name in dic.values():
+                lst.append(name['name'].lower())
+                lstIndexDic[index] = name['name']
+                lstLowerIndexDic[name['name'].lower()] = index
+                index += 1
+            srtLstLower = mergeSort(lst)
+            for name in srtLstLower:
+                srtLst.append(lstIndexDic[lstLowerIndexDic[name]])
+        elif key == 1:
+            for id in dic.keys():
+                lst.append(id)
+            srtLst = mergeSort(lst)
+
+    except:
+        pass
+
+    return srtLst
 
 def flipIDData(dic):
     """
@@ -208,8 +232,8 @@ def games2Weeks(steamId):
         games2weeks = {}
         for game in recGa['response']['games']:
             games2weeks[game['appid']] = {'name': game['name'], 'playtime_2weeks': game['playtime_2weeks'], 'playtime': game['playtime_forever']}
-
-    except: #Dus als het prive is dan geeft het een lege dictionary terug
+    #Dus als het prive is dan geeft het een lege dictionary terug
+    except:
         games2weeks = {}
     return games2weeks
 
@@ -221,8 +245,8 @@ def ownedGames(steamId):
     Returns:
     Dictionary met id als key en data als value
     """
-    # Als de profiel prive is gaat er een error komen
     oGaDic = {}
+    #Als de profiel prive is gaat er een error komen
     try:
         #De API call
         ownedGames = requests.get(f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={key}&steamid={steamId}&format=json&include_appinfo=True&include_played_free_games=True')
@@ -231,7 +255,8 @@ def ownedGames(steamId):
         for game in oGa['response']['games']:
             oGaDic[game['appid']] = {'name': game['name'], 'playtime': game['playtime_forever']}
 
-    except: #Dus als het prive is dan geeft het een lege dictionary terug
+    #Dus als het prive is dan geeft het een lege dictionary terug
+    except:
         pass
     return oGaDic
 
@@ -244,8 +269,9 @@ def allAchievements(steamId, appId):
     :return:
     """
     achDic = {}
-
-    try: #Is een profiel prive dan zal er een foutmelding komen
+    achDicStats = {}
+    #Is een profiel prive dan zal er een foutmelding komen
+    try:
         playerAchievements = requests.get(
             f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
         plyAch = playerAchievements.json()
@@ -259,6 +285,7 @@ def allAchievements(steamId, appId):
             tot += 1
         achDicStats = {'achTot': tot, 'achAchieved': achieved, 'achprocent': (achieved/tot) * 100, 'achievements': achDic}
 
+    #Dus zal de dictionary leeg zijn
     except:
         pass
 
@@ -276,10 +303,12 @@ def recentGamesAchievements(steamId, appId):
     try:
         achDic = allAchievements(steamId, appId)
 
+        #Zorgt ervoor de dat unlocktime de key wordt en de naam de "unlocktime" wordt
         ciDhca = {}
         for name, data in achDic['achievements'].items():
             ciDhca[data['unlocktime']], data['unlocktime'] = data, name
 
+        #Hier wordt alle
         times = []
         for time in ciDhca.keys():
             times.append(time)
@@ -295,20 +324,41 @@ def recentGamesAchievements(steamId, appId):
 
     return recAchDic
 
-'''print(datetime.utcfromtimestamp(1284101485).strftime('%Y-%m-%d %H:%M:%S'))  #https://stackoverflow.com/questions/3682748/converting-unix-timestamp-string-to-readable-date
-print(friendlistData(steamId))
-print(flipIDData(friendlistData(steamId)))
-print(games2Weeks(steamId))
-print(flipIDData(games2Weeks(steamId)))
-print(ownedGames(steamId))
-print(flipIDData(ownedGames(steamId)))
-#print(newsJson) skip?
-print(achJson)
-print(sumJson)
-playerAchievements = requests.get(f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
-plyAch = playerAchievements.json()
-print(plyAch)
-print(allAchievements(steamId,appId))
-print(recentGamesAchievements(steamId, appId))
+def frequencyGamesAllFriends(steamId):
+    """
+    Telt hoeveel van je vrienden welke games deelt met jou
+    :param steamId: steamId van user
+    :return:
+    dictionary met twee gesorteerde lijsten. Lijst met namen en frequenties
+    """
+    friendsDic = friendlistData(steamId)
+    lstAllName = []
+    for id in friendsDic.keys():
+        ownGamDic = ownedGames(id)
+        if len(ownGamDic) != 0:
+            for name in ownGamDic.values():
+                lstAllName.append(name['name'])
+
+    freqDic = freq(lstAllName)
+
+    ciDqerf = {}
+    for name, frequency in freqDic.items():
+        ciDqerf[frequency] , name = name, frequency
+
+    frequencies = []
+    for fre in ciDqerf:
+        frequencies.append(fre)
+    stbFre = mergeSort(frequencies)
+    btsFre = bigToSmallSort(stbFre)
+
+    names = []
+    for frec in btsFre[:11]:
+        names.append(ciDqerf[frec])
+
+    top10MostPlayed = {'name': names, 'frequency': btsFre[:11]}
+    return top10MostPlayed
+
+print(frequencyGamesAllFriends(steamId))
+
+
 #1145360 Hades
-print(oGa)'''
