@@ -1,4 +1,5 @@
 import requests
+import threading
 from datetime import datetime
 
 key = '882B75E94431CD842CCD402F7E9C1A73'
@@ -230,8 +231,14 @@ def games2Weeks(steamId):
         recGa = recentlyGames.json()
 
         games2weeks = {}
+        i = 0
         for game in recGa['response']['games']:
-            games2weeks[game['appid']] = {'name': game['name'], 'playtime_2weeks': game['playtime_2weeks'], 'playtime': game['playtime_forever']}
+            if i < 3:
+                games2weeks[game['appid']] = {'name': game['name'], 'playtime_2weeks': game['playtime_2weeks'], 'playtime': game['playtime_forever']}
+            else:
+                break
+            i += 1
+
     #Dus als het prive is dan geeft het een lege dictionary terug
     except:
         games2weeks = {}
@@ -300,27 +307,26 @@ def recentGamesAchievements(steamId, appId):
     """
     recAchDic = {}
 
-    try:
-        achDic = allAchievements(steamId, appId)
 
-        #Zorgt ervoor de dat unlocktime de key wordt en de naam de "unlocktime" wordt
-        ciDhca = {}
-        for name, data in achDic['achievements'].items():
-            ciDhca[data['unlocktime']], data['unlocktime'] = data, name
+    achDic = allAchievements(steamId, appId)
 
-        #Hier wordt alle
-        times = []
-        for time in ciDhca.keys():
-            times.append(time)
-        recUnlockTime = bigToSmallSort(times)
+    #Zorgt ervoor de dat unlocktime de key wordt en de naam de "unlocktime" wordt
+    ciDhca = {}
+    for name, data in achDic['achievements'].items():
+        ciDhca[data['unlocktime']], data['unlocktime'] = data, name
 
-        recAch = []
-        for time in recUnlockTime[:4]:
-            recAch.append(ciDhca[time]['unlocktime'])
+    #Hier wordt alle
+    times = []
+    for time in ciDhca.keys():
+        times.append(time)
+    recUnlockTime = bigToSmallSort(times)
 
-        recAchDic = {'time': recUnlockTime[:4], 'name': recAch}
-    except:
-        pass
+    recAch = []
+    for time in recUnlockTime[:4]:
+        recAch.append(ciDhca[time]['unlocktime'])
+
+    recAchDic = {'time': recUnlockTime[:4], 'name': recAch}
+
 
     return recAchDic
 
@@ -340,25 +346,29 @@ def frequencyGamesAllFriends(steamId):
                 lstAllName.append(name['name'])
 
     freqDic = freq(lstAllName)
-
-    ciDqerf = {}
-    for name, frequency in freqDic.items():
-        ciDqerf[frequency] , name = name, frequency
+    copyDic = freqDic
 
     frequencies = []
-    for fre in ciDqerf:
+    for fre in copyDic.values():
         frequencies.append(fre)
     stbFre = mergeSort(frequencies)
     btsFre = bigToSmallSort(stbFre)
+    top5 = btsFre[:6]
+    copy5 = top5
 
     names = []
-    for frec in btsFre[:11]:
-        names.append(ciDqerf[frec])
-
-    top10MostPlayed = {'name': names, 'frequency': btsFre[:11]}
-    return top10MostPlayed
-
-print(frequencyGamesAllFriends(steamId))
+    while len(copy5) != 0:
+        for name, frequency in copyDic.items():
+            if copy5[0] == copyDic[name]:
+                pass
 
 
+    # for frec in btsFre[:6]:
+    #     names.append(ciDqerf[frec])
+    #
+    # top10MostPlayed = {'name': names, 'frequency': btsFre[:6]}
+    return #top10MostPlayed
+
+print(games2Weeks(76561198282684497))
+#print(frequencyGamesAllFriends(steamId))
 #1145360 Hades
