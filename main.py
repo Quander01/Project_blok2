@@ -10,9 +10,7 @@ matplotlib.use("TkAgg")
 root = tk.Tk()
 screen_height = int((root.winfo_screenheight())/1.5)
 screen_width = int(screen_height*16/9)
-print(screen_height)
 root.geometry("{}x{}".format(screen_width, screen_height))
-print("{}x{}".format(int(screen_height*16/9), screen_height))
 text_colour = '#c7d5e0'                                         # slightly blue white-ish
 background_colour = '#1b2838'                                   # steam dark blue
 figure_colour = '#2a475e'                                       # steam blue
@@ -121,7 +119,7 @@ def initiate_bar_chart(title, plot_data, axis_titles, frame):
 # Assigns usage of on_click and mouseover functions
 # Then draws the canvas
 def initiate_progress_bar(title, percentage, frame):
-    fig = create_chart(title,'NONE', percentage, "progress", 513)
+    fig = create_chart(title, 'NONE', percentage, "progress", 513)
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
     canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
@@ -177,22 +175,27 @@ def gui():
 # Graph frames are created and data sent to the initiators
 def frames():
     # IMPORTS
+    xaxis_2weeks = []
+    yaxis_2weeks = []
+    used_games = []
     recent_playtime = Ai.games2Weeks(Ai.steamId)
     print(recent_playtime)
-    achievements = Ai.allAchievements(Ai.steamId, 431960)
-    print(achievements)
+    for i in recent_playtime:
+        xaxis_2weeks.append(recent_playtime[i]['name'])
+        yaxis_2weeks.append(recent_playtime[i]['playtime_2weeks'])
+        used_games.append(i)
+    achievements = Ai.allAchievements(Ai.steamId, used_games[0])
+    recent_achievements = Ai.recentGamesAchievements(Ai.steamId, used_games[0])
+    print(recent_achievements)
+    ach_percentage = achievements['achprocent']
+
 
     # FRAME 1
     frame1 = tk.Frame(root)
     frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-    initiate_pie_chart("pie chart demo 1", (1, 2, 3, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame1)
+    initiate_pie_chart("pie chart demo 1", yaxis_2weeks, xaxis_2weeks, frame1)
 
     # FRAME 2
-    xaxis_2weeks = []
-    yaxis_2weeks = []
-    for i in recent_playtime:
-        xaxis_2weeks.append(recent_playtime[i]['name'])
-        yaxis_2weeks.append(recent_playtime[i]['playtime_2weeks'])
     frame2 = tk.Frame(root)
     frame2.grid(row=2, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
     initiate_bar_chart("Your recent playtime (minutes)", yaxis_2weeks, xaxis_2weeks, frame2)
@@ -200,23 +203,23 @@ def frames():
     # FRAME 3
     frame3 = tk.Frame(root)
     frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-    initiate_bar_chart("bar chart demo 2", (3, 2, 3, 4, 3), ('A', 'B', 'C', 'D', 'E'), frame3)
+    initiate_bar_chart("bar chart demo 2", yaxis_2weeks, xaxis_2weeks, frame3)
 
     # FRAME 4
     frame4 = tk.Frame(root)
     frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-    initiate_pie_chart("pie chart demo 2", (4, 2, 4, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame4)
+    initiate_pie_chart("pie chart demo 2", yaxis_2weeks, xaxis_2weeks, frame4)
 
     # FRAME 5
     frame5 = tk.Frame(root)
     frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-    initiate_pie_chart("pie chart demo 3", (1, 2, 5, 4, 5), ('A', 'B', 'C', 'D', 'E'), frame5)
+    initiate_pie_chart("achievement % for" + xaxis_2weeks[0],yaxis_2weeks, xaxis_2weeks, frame5)
 
     # FRAME 6
-    ach_percentage = achievements['achprocent']
+
     frame6 = tk.Frame(root)
     frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-    initiate_progress_bar("achievement % for " + recent_playtime[431960]['name'], ach_percentage, frame6)
+    initiate_progress_bar("achievement % for " + xaxis_2weeks[0], ach_percentage, frame6)
 
 
 gui()
