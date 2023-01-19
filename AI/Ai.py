@@ -3,7 +3,7 @@ import threading
 from datetime import datetime
 
 key = '882B75E94431CD842CCD402F7E9C1A73'
-steamId = '76561198111929702'
+steamId = '76561198282499475'
 appId = '367520'
 
 #Algemene statistiek functies______________________________________
