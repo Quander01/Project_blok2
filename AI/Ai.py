@@ -353,7 +353,7 @@ def frequencyGamesAllFriends(steamId):
         frequencies.append(fre)
     stbFre = mergeSort(frequencies)
     btsFre = bigToSmallSort(stbFre)
-    top5 = btsFre[:6]
+    top5 = btsFre[:5]
     copy5 = top5
 
     names = []
@@ -365,5 +365,7 @@ def frequencyGamesAllFriends(steamId):
                 copyDic.pop(name)
                 break
 
-    top10MostPlayed = {'name': names, 'frequency': btsFre[:6]}
-    return top10MostPlayed
+    top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
+    return top5MostPlayed
+
+print(frequencyGamesAllFriends(steamId))
