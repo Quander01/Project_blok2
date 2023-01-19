@@ -360,15 +360,10 @@ def frequencyGamesAllFriends(steamId):
     while len(copy5) != 0:
         for name, frequency in copyDic.items():
             if copy5[0] == copyDic[name]:
-                pass
+                names.append(name)
+                copy5.pop(0)
+                copyDic.pop(name)
+                break
 
-
-    # for frec in btsFre[:6]:
-    #     names.append(ciDqerf[frec])
-    #
-    # top10MostPlayed = {'name': names, 'frequency': btsFre[:6]}
-    return #top10MostPlayed
-
-print(games2Weeks(76561198282684497))
-#print(frequencyGamesAllFriends(steamId))
-#1145360 Hades
+    top10MostPlayed = {'name': names, 'frequency': btsFre[:6]}
+    return top10MostPlayed
