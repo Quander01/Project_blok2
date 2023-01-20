@@ -1,12 +1,16 @@
 # import all bullshit
-import functools, tkinter as tk, matplotlib
+import functools
+import matplotlib
+import tkinter as tk
+from webbrowser import open
+
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-from AI import Ai
-from webbrowser import open
-matplotlib.use("TkAgg")
 
+from AI import Ai
+
+matplotlib.use("TkAgg")
 
 
 root = tk.Tk()
@@ -47,92 +51,110 @@ def show_profile():
     open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
     return
 
-
 def find_friends(friends_list):
-    friends_dict = Ai.friendlistData(Ai.steamId)
+    friends_dict = Ai.friendlistData(user_id)
     for i in friends_dict:
         friends_list.insert(tk.END, friends_dict[i]['name'])
     return
 
-class CreateGUI:
+
+class CreateCharts:
+    def __init__(self, title, data, axis, chart_type, frame, steamid):
+        self.steamId = steamid
+        self.chart_type = chart_type
+        self.title = title
+        self.axis = axis
+        self.data = data
+        self.frame = frame
+        if chart_type == "progress":
+            self.initiate_progress_bar()
+        elif chart_type == "bar":
+            self.initiate_bar_chart()
+        elif chart_type == "pie":
+            self.initiate_pie_chart()
+
+
 
     # Function takes in three parameters: title of the figure, axis names and data to display.
     # It creates and returns a pie chart using the matplotlib library.
-    def create_chart(self, title, axis, data, chart_type, subplots=111):
+    def create_chart(self):
         plt.rcParams['text.color'] = text_colour
         fig = Figure(facecolor=figure_colour, figsize=(screen_width/3.8*px, screen_height/2.7*px))
-        if chart_type == "progress":
-            ax = fig.add_subplot(subplots)
+        if self.chart_type == "progress":
+            ax = fig.add_subplot(513)
         else:
             ax = fig.add_subplot(111)
         ax.set_facecolor(backboard_colour)
-        ax.set_title(title)
-        if chart_type == "pie":
-            labels = axis
-            values = data
+        ax.set_title(self.title)
+        if self.chart_type == "pie":
+            labels = self.axis
+            values = self.data
             plt.style.use('dark_background')
             ax.pie(values, labels=labels, colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'])
-        elif chart_type == "bar":
-            x_values = axis
-            y_values = data
+        elif self.chart_type == "bar":
+            x_values = self.axis
+            y_values = self.data
             bars = ax.bar(x_values, y_values)
             ax.bar_label(bars)
-        elif chart_type == "progress":
+        elif self.chart_type == "progress":
             ax.set_xlim([0, 100])
             ax.set_yticks([])
-            rect = plt.Rectangle((0, 0), data, 1, color=highlight_colour)
+            rect = plt.Rectangle((0, 0), self.data, 1, color=highlight_colour)
             ax.add_patch(rect)
         else:
             raise ValueError("Invalid chart type")
         return fig
 
-
     # Sends the title, plot data and axis titles to the pie chart creator
     # Makes a canvas on the current frame ID
     # Assigns usage of on_click and mouseover functions
     # Then draws the canvas
-    def initiate_pie_chart(self, title, plot_data, axis_titles, frame):
-        fig = self.create_chart(title, axis_titles, plot_data, "pie")
-        canvas = FigureCanvasTkAgg(fig, master=frame)
+    def initiate_pie_chart(self):
+        fig = self.create_chart()
+        canvas = FigureCanvasTkAgg(fig, master=self.frame)
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
-        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, title))
+        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, self.title))
         canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
         canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
         canvas.draw()
-
 
     # Sends the title, plot data and axis titles to the bar chart creator
     # Makes a canvas on the current frame ID
     # Assigns usage of on_click and mouseover functions
     # Then draws the canvas
-    def initiate_bar_chart(self, title, plot_data, axis_titles, frame):
-        fig = self.create_chart(title, axis_titles, plot_data, "bar")
-        canvas = FigureCanvasTkAgg(fig, master=frame)
+    def initiate_bar_chart(self):
+        fig = self.create_chart()
+        canvas = FigureCanvasTkAgg(fig, master=self.frame)
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
-        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, title))
+        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, self.title))
         canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
         canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
         canvas.draw()
-
 
     # Sends the title and percentage to the progress bar creator
     # Makes a canvas on the current frame ID
     # Assigns usage of on_click and mouseover functions
     # Then draws the canvas
-    def initiate_progress_bar(self, title, percentage, frame):
-        fig = self.create_chart(title, 'NONE', percentage, "progress", 513)
-        canvas = FigureCanvasTkAgg(fig, master=frame)
+    def initiate_progress_bar(self):
+        fig = self.create_chart()
+        canvas = FigureCanvasTkAgg(fig, master=self.frame)
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
-        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, title))
+        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, self.title))
         canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
         canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
         canvas.draw()
 
+
+class CreateGUI:
+    def __init__(self, steamid):
+        self.steamid = steamid
+        self.gui()
+
     # Makes the root gui frames, top bar with title, profile button, friends list and under frame
-    def __init__(self):
+    def gui(self):
         root.title("Steam dashboard")
         root.configure(bg=background_colour)
         root.resizable(False, False)
@@ -159,10 +181,10 @@ class CreateGUI:
         listbox_frame = tk.Frame(root, bg=backboard_colour)
         listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news', padx=screen_width/113)
 
-        friends_list = tk.Listbox(listbox_frame, bg=backboard_colour, fg=text_colour, selectmode='single', font=(general_font, 17), selectbackground=highlight_colour, selectforeground='Black', activestyle='none')
-        friends_list.config(highlightthickness=0, width=0)
-        friends_list.pack(side='left', fill='y')
-        find_friends(friends_list)
+        self.friends_list = tk.Listbox(listbox_frame, bg=backboard_colour, fg=text_colour, selectmode='single', font=(general_font, 17), selectbackground=highlight_colour, selectforeground='Black', activestyle='none')
+        self.friends_list.config(highlightthickness=0, width=0)
+        self.friends_list.pack(side='left', fill='y')
+        find_friends(self.friends_list)
         profile_button.config(width=int(screen_width/85.3))
 
         # BOTTOM FRAME
@@ -179,47 +201,45 @@ class CreateGUI:
         xaxis_2weeks = []
         yaxis_2weeks = []
         used_games = []
-        recent_playtime = Ai.games2Weeks(Ai.steamId)
-        print(recent_playtime)
+        recent_playtime = Ai.games2Weeks(user_id)
         for i in recent_playtime:
             xaxis_2weeks.append(recent_playtime[i]['name'])
             yaxis_2weeks.append(recent_playtime[i]['playtime_2weeks'])
             used_games.append(i)
-        achievements = Ai.allAchievements(Ai.steamId, used_games[0])
-        recent_achievements = Ai.recentGamesAchievements(Ai.steamId, used_games[0])
-        print(recent_achievements)
+        achievements = Ai.allAchievements(user_id, used_games[0])
+        recent_achievements = Ai.recentGamesAchievements(user_id, used_games[0])
         ach_percentage = achievements['achprocent']
 
         # FRAME 1
         frame1 = tk.Frame(root)
         frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        self.initiate_pie_chart("pie chart demo 1", yaxis_2weeks, xaxis_2weeks, frame1)
+        CreateCharts("pie chart demo 1", yaxis_2weeks, xaxis_2weeks, 'pie', frame1, self.steamid)
 
         # FRAME 2
         frame2 = tk.Frame(root)
         frame2.grid(row=2, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        self.initiate_bar_chart("Your recent playtime (minutes)", yaxis_2weeks, xaxis_2weeks, frame2)
+        CreateCharts("Your recent playtime (minutes)", yaxis_2weeks, xaxis_2weeks, 'bar', frame2, self.steamid)
 
         # FRAME 3
         frame3 = tk.Frame(root)
         frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        self.initiate_bar_chart("bar chart demo 2", yaxis_2weeks, xaxis_2weeks, frame3)
+        CreateCharts("bar chart demo 2", yaxis_2weeks, xaxis_2weeks, 'bar', frame3, self.steamid)
 
         # FRAME 4
         frame4 = tk.Frame(root)
         frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        self.initiate_pie_chart("pie chart demo 2", yaxis_2weeks, xaxis_2weeks, frame4)
+        CreateCharts("pie chart demo 2", yaxis_2weeks, xaxis_2weeks, 'pie', frame4, self.steamid)
 
         # FRAME 5
         frame5 = tk.Frame(root)
         frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        self.initiate_pie_chart("achievement % for" + xaxis_2weeks[0],yaxis_2weeks, xaxis_2weeks, frame5)
+        CreateCharts("achievement % for" + xaxis_2weeks[0], yaxis_2weeks, xaxis_2weeks, 'bar', frame5, self.steamid)
 
         # FRAME 6
 
         frame6 = tk.Frame(root)
         frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        self.initiate_progress_bar("achievement % for " + xaxis_2weeks[0], ach_percentage, frame6)
+        CreateCharts("achievement % for " + xaxis_2weeks[0], ach_percentage, '0', 'progress', frame6, self.steamid)
 
 
 class Login:
@@ -227,14 +247,23 @@ class Login:
         self.login_frame = tk.Frame(root)
         self.login_frame.grid(row=0, column=0)
         self.login_box = tk.Entry(self.login_frame)
-        self.login_button = tk.Button(text= 'Log me the fuck in', command=self.start_login)
+        self.login_button = tk.Button(self.login_frame, text='Log me the fuck in', command=self.start_login)
+        self.login_label = tk.Label(self.login_frame, text='')
         self.login_box.grid()
         self.login_button.grid()
+        self.login_label.grid()
+
 
     def start_login(self):
-        ID = self.login_box.get()
-        print(ID)
-        CreateGUI()
+        global user_id
+        user_id = self.login_box.get()
+        if len(user_id) != 17:
+            self.login_label.config(text="Invalid steam id")
+            raise ValueError('Invalid steam id')
+        else:
+            CreateGUI(user_id)
+
+
 
 
 Login()

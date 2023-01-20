@@ -3,8 +3,8 @@ import threading
 from datetime import datetime
 
 key = '882B75E94431CD842CCD402F7E9C1A73'
-steamId = '76561198282499475'
-appId = '367520'
+#steamId = '76561198282499475'
+#appId = '367520'
 
 #Algemene statistiek functies______________________________________
 def mergeSort(lst):
