@@ -51,6 +51,7 @@ def show_profile():
     open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
     return
 
+
 def find_friends(friends_list):
     friends_dict = Ai.friendlistData(user_id)
     for i in friends_dict:
@@ -72,8 +73,6 @@ class CreateCharts:
             self.initiate_bar_chart()
         elif chart_type == "pie":
             self.initiate_pie_chart()
-
-
 
     # Function takes in three parameters: title of the figure, axis names and data to display.
     # It creates and returns a pie chart using the matplotlib library.
@@ -153,11 +152,14 @@ class CreateGUI:
         self.steamid = steamid
         self.gui()
 
+    def test_command(self):
+        print('howdy')
+        return
+
     # Makes the root gui frames, top bar with title, profile button, friends list and under frame
     def gui(self):
         root.title("Steam dashboard")
         root.configure(bg=background_colour)
-        root.resizable(False, False)
         for i in range(4):
             root.grid_columnconfigure(i, weight=1)
             root.grid_rowconfigure(i, weight=1)
@@ -171,28 +173,40 @@ class CreateGUI:
         title_label.grid(row=0, column=2, pady=screen_height/19.2)
 
         # PROFILE BUTTON
-        profile_bar = tk.Frame(root, bg=backboard_colour)
-        profile_bar.grid(row=0, column=0, columnspan=1, rowspan=6, sticky="news")
+        profile_bar = tk.Frame(root, bg=background_colour)
+        profile_bar.grid(row=1, column=0, columnspan=1, rowspan=6, sticky="news")
 
-        profile_button = tk.Button(profile_bar, text="Profile", font=(general_font, 18), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER, command=show_profile, height=int(screen_height/192))
-        profile_button.grid(sticky="news")
+        profile_button = tk.Button(profile_bar, text="Profile", font=(general_font, 16), fg=text_colour,
+                                   bg=figure_colour, anchor=tk.CENTER, command=show_profile, height=4)
+        profile_button.grid(sticky="news", padx=10, pady=10)
+        profile_button.config(width=int(screen_width / 85.3))
 
         # FRIENDS LIST
-        listbox_frame = tk.Frame(root, bg=backboard_colour)
-        listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news', padx=screen_width/113)
+        listbox_frame = tk.Frame(root, bg=background_colour)
+        listbox_frame.grid(row=3, column=0, rowspan=3, sticky='news')
 
-        self.friends_list = tk.Listbox(listbox_frame, bg=backboard_colour, fg=text_colour, selectmode='single', font=(general_font, 17), selectbackground=highlight_colour, selectforeground='Black', activestyle='none')
-        self.friends_list.config(highlightthickness=0, width=0)
-        self.friends_list.pack(side='left', fill='y')
+        self.friends_list = tk.Listbox(listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single', font=(general_font, 17), selectbackground=highlight_colour)
+        self.friends_list.config(highlightthickness=0)
+        self.friends_list.pack(side='left', fill='y', expand=True)
         find_friends(self.friends_list)
-        profile_button.config(width=int(screen_width/85.3))
 
         # BOTTOM FRAME
-        bottom_frame = tk.Frame(root, bg=backboard_colour,)
+        bottom_frame = tk.Frame(root, bg=background_colour,)
         bottom_frame.grid(row=4, column=1, columnspan=3, sticky='news')
 
-        under_text = tk.Label(bottom_frame, text='hello there', bg=backboard_colour, fg=text_colour, font=(general_font, 20))
+        under_text = tk.Label(bottom_frame, text='hello there', bg=background_colour, fg=text_colour, font=(general_font, 20))
         under_text.pack(side='left')
+
+        # LOGOUT BUTTON
+
+        logout_bar = tk.Frame(root, bg=background_colour)
+        logout_bar.grid(row=4, column=0, columnspan=1, rowspan=6, sticky="news")
+
+        logout_button = tk.Button(logout_bar, text="Logout", font=(general_font, 16), fg=text_colour, bg=figure_colour,
+                                  anchor=tk.CENTER, command=show_profile, height=1)
+        logout_button.grid(sticky="news", padx=10, pady=10)
+        logout_button.config(width=int(screen_width / 85.3))
+
         self.frames()
 
     # Graph frames are created and data sent to the initiators
@@ -244,15 +258,28 @@ class CreateGUI:
 
 class Login:
     def __init__(self):
-        self.login_frame = tk.Frame(root)
-        self.login_frame.grid(row=0, column=0)
-        self.login_box = tk.Entry(self.login_frame)
-        self.login_button = tk.Button(self.login_frame, text='Log me the fuck in', command=self.start_login)
-        self.login_label = tk.Label(self.login_frame, text='')
-        self.login_box.grid()
-        self.login_button.grid()
-        self.login_label.grid()
+        self.login_screen = tk.Toplevel(root)
+        self.login_screen.configure(bg=background_colour, width=screen_width, height=screen_height)
+        self.login_screen.title('Login')
 
+        self.welcome_label = tk.Label(self.login_screen, text="Please enter your login details", font=(general_font, 14), fg=text_colour, bg=background_colour)
+        self.welcome_label.grid(row=0, column=0, columnspan=3, sticky="wsne")
+        self.welcome_label.grid_columnconfigure(2, weight=1)
+
+        self. username_label = tk.Label(self.login_screen, text="SteamID:", font=(general_font, 14), fg=text_colour, bg=background_colour)
+        self.username_label.grid(row=1, column=0, pady=10, padx=10)
+
+        self.login_box = tk.Entry(self.login_screen)
+        self.login_box.insert(0, '76561198282499475')
+        self.login_box.grid(row=1, column=1, pady=10, padx=10)
+
+        self.login_button = tk.Button(self.login_screen, text='Log me the fuck in', command=self.start_login)
+        self.login_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+        self.login_label = tk.Label(self.login_screen, text='', font=(general_font, 14), fg=text_colour, bg=background_colour)
+        self.login_label.grid(row=4, column=0, columnspan=2)
+
+        root.withdraw()
 
     def start_login(self):
         global user_id
@@ -261,8 +288,9 @@ class Login:
             self.login_label.config(text="Invalid steam id")
             raise ValueError('Invalid steam id')
         else:
+            self.login_screen.destroy()
+            root.deiconify()
             CreateGUI(user_id)
-
 
 
 
