@@ -3,8 +3,8 @@ import threading
 from datetime import datetime
 
 key = '882B75E94431CD842CCD402F7E9C1A73'
-#steamId = '76561198282499475'
-#appId = '367520'
+steamId = '76561198111929702'
+appId = '367520'
 
 #Algemene statistiek functies______________________________________
 def mergeSort(lst):
@@ -211,8 +211,9 @@ def flipIDData(dic):
     De geflipte dictionary
     """
     cid = {}
-    for id, data in dic.items():
-        cid[data['name']], data['name'] = data, id
+    dicCopy = dic
+    for id, data in dicCopy.items():
+        cid[data['name']] = {'id': id, 'avatar': data['avatar']}
     return cid
 
 def games2Weeks(steamId):
@@ -353,7 +354,7 @@ def frequencyGamesAllFriends(steamId):
         frequencies.append(fre)
     stbFre = mergeSort(frequencies)
     btsFre = bigToSmallSort(stbFre)
-    top5 = btsFre[:6]
+    top5 = btsFre[:5]
     copy5 = top5
 
     names = []
@@ -365,5 +366,5 @@ def frequencyGamesAllFriends(steamId):
                 copyDic.pop(name)
                 break
 
-    top10MostPlayed = {'name': names, 'frequency': btsFre[:6]}
-    return top10MostPlayed
+    top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
+    return top5MostPlayed

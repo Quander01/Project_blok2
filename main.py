@@ -53,9 +53,18 @@ def show_profile():
 
 
 def find_friends(friends_list):
+    global friends_dict
+    global flipped_friends_dict
     friends_dict = Ai.friendlistData(user_id)
+    flipped_friends_dict = Ai.flipIDData(friends_dict)
     for i in friends_dict:
         friends_list.insert(tk.END, friends_dict[i]['name'])
+    return
+
+
+def logout_function():
+    root.withdraw()
+    Login()
     return
 
 
@@ -150,11 +159,28 @@ class CreateCharts:
 class CreateGUI:
     def __init__(self, steamid):
         self.steamid = steamid
+        #print(Ai.frequencyGamesAllFriends(self.steamid))
         self.gui()
+
 
     def test_command(self):
         print('howdy')
         return
+
+    def list_select(self, event):
+        selection = event.widget.curselection()
+        picked = event.widget.get(selection[0])
+        ID = flipped_friends_dict[picked]['id']
+        print(picked)
+        print(ID)
+        self.frame1.destroy()
+        self.frame2.destroy()
+        self.frame3.destroy()
+        self.frame4.destroy()
+        self.frame5.destroy()
+        self.frame6.destroy()
+        self.steamid = ID
+        self.frames(self.steamid)
 
     # Makes the root gui frames, top bar with title, profile button, friends list and under frame
     def gui(self):
@@ -174,7 +200,7 @@ class CreateGUI:
 
         # PROFILE BUTTON
         profile_bar = tk.Frame(root, bg=background_colour)
-        profile_bar.grid(row=1, column=0, columnspan=1, rowspan=6, sticky="news")
+        profile_bar.grid(row=0, column=0, columnspan=1, rowspan=6, sticky="news")
 
         profile_button = tk.Button(profile_bar, text="Profile", font=(general_font, 16), fg=text_colour,
                                    bg=figure_colour, anchor=tk.CENTER, command=show_profile, height=4)
@@ -183,12 +209,13 @@ class CreateGUI:
 
         # FRIENDS LIST
         listbox_frame = tk.Frame(root, bg=background_colour)
-        listbox_frame.grid(row=3, column=0, rowspan=3, sticky='news')
+        listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news')
 
-        self.friends_list = tk.Listbox(listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single', font=(general_font, 17), selectbackground=highlight_colour)
-        self.friends_list.config(highlightthickness=0)
-        self.friends_list.pack(side='left', fill='y', expand=True)
-        find_friends(self.friends_list)
+        friends_list = tk.Listbox(listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single', font=(general_font, 17), selectbackground=highlight_colour)
+        friends_list.config(highlightthickness=0)
+        friends_list.bind("<<ListboxSelect>>", self.list_select)
+        friends_list.pack(side='left', fill='y', expand=True)
+        find_friends(friends_list)
 
         # BOTTOM FRAME
         bottom_frame = tk.Frame(root, bg=background_colour,)
@@ -203,57 +230,59 @@ class CreateGUI:
         logout_bar.grid(row=4, column=0, columnspan=1, rowspan=6, sticky="news")
 
         logout_button = tk.Button(logout_bar, text="Logout", font=(general_font, 16), fg=text_colour, bg=figure_colour,
-                                  anchor=tk.CENTER, command=show_profile, height=1)
+                                  anchor=tk.CENTER, command=logout_function, height=1)
         logout_button.grid(sticky="news", padx=10, pady=10)
         logout_button.config(width=int(screen_width / 85.3))
 
-        self.frames()
+        self.frames(user_id)
 
     # Graph frames are created and data sent to the initiators
-    def frames(self):
+    def frames(self, steamid):
         # IMPORTS
         xaxis_2weeks = []
         yaxis_2weeks = []
         used_games = []
-        recent_playtime = Ai.games2Weeks(user_id)
+        recent_playtime = Ai.games2Weeks(steamid)
         for i in recent_playtime:
             xaxis_2weeks.append(recent_playtime[i]['name'])
             yaxis_2weeks.append(recent_playtime[i]['playtime_2weeks'])
             used_games.append(i)
-        achievements = Ai.allAchievements(user_id, used_games[0])
-        recent_achievements = Ai.recentGamesAchievements(user_id, used_games[0])
+        print(used_games)
+        achievements = Ai.allAchievements(steamid, used_games[0])
+        print(achievements)
+        recent_achievements = Ai.recentGamesAchievements(steamid, used_games[0])
         ach_percentage = achievements['achprocent']
 
         # FRAME 1
-        frame1 = tk.Frame(root)
-        frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("pie chart demo 1", yaxis_2weeks, xaxis_2weeks, 'pie', frame1, self.steamid)
+        self.frame1 = tk.Frame(root)
+        self.frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
+        CreateCharts("pie chart demo 1", yaxis_2weeks, xaxis_2weeks, 'pie', self.frame1, self.steamid)
 
         # FRAME 2
-        frame2 = tk.Frame(root)
-        frame2.grid(row=2, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("Your recent playtime (minutes)", yaxis_2weeks, xaxis_2weeks, 'bar', frame2, self.steamid)
+        self.frame2 = tk.Frame(root)
+        self.frame2.grid(row=2, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
+        CreateCharts("Your recent playtime (minutes)", yaxis_2weeks, xaxis_2weeks, 'bar', self.frame2, self.steamid)
 
         # FRAME 3
-        frame3 = tk.Frame(root)
-        frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("bar chart demo 2", yaxis_2weeks, xaxis_2weeks, 'bar', frame3, self.steamid)
+        self.frame3 = tk.Frame(root)
+        self.frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
+        CreateCharts("bar chart demo 2", yaxis_2weeks, xaxis_2weeks, 'bar', self.frame3, self.steamid)
 
         # FRAME 4
-        frame4 = tk.Frame(root)
-        frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("pie chart demo 2", yaxis_2weeks, xaxis_2weeks, 'pie', frame4, self.steamid)
+        self.frame4 = tk.Frame(root)
+        self.frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
+        CreateCharts("pie chart demo 2", yaxis_2weeks, xaxis_2weeks, 'pie', self.frame4, self.steamid)
 
         # FRAME 5
-        frame5 = tk.Frame(root)
-        frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("achievement % for" + xaxis_2weeks[0], yaxis_2weeks, xaxis_2weeks, 'bar', frame5, self.steamid)
+        self.frame5 = tk.Frame(root)
+        self.frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
+        CreateCharts("achievement % for" + xaxis_2weeks[0], yaxis_2weeks, xaxis_2weeks, 'bar', self.frame5, self.steamid)
 
         # FRAME 6
 
-        frame6 = tk.Frame(root)
-        frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("achievement % for " + xaxis_2weeks[0], ach_percentage, '0', 'progress', frame6, self.steamid)
+        self.frame6 = tk.Frame(root)
+        self.frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
+        CreateCharts("achievement % for " + xaxis_2weeks[0], ach_percentage, '0', 'progress', self.frame6, self.steamid)
 
 
 class Login:
@@ -291,6 +320,8 @@ class Login:
             self.login_screen.destroy()
             root.deiconify()
             CreateGUI(user_id)
+
+
 
 
 
