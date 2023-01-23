@@ -213,7 +213,7 @@ def flipIDData(dic):
     cid = {}
     dicCopy = dic
     for id, data in dicCopy.items():
-        cid[data['name']], data['name'] = data, id
+        cid[data['name']] = {'id': id, 'avatar': data['avatar']}
     return cid
 
 def games2Weeks(steamId):
@@ -368,4 +368,3 @@ def frequencyGamesAllFriends(steamId):
 
     top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
     return top5MostPlayed
-
