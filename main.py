@@ -12,7 +12,6 @@ from AI import Ai
 
 matplotlib.use("TkAgg")
 
-
 root = tk.Tk()
 screen_height = int(root.winfo_screenheight()/1.2)
 screen_width = int(screen_height*16/9)
@@ -33,6 +32,12 @@ px = 1/plt.rcParams['figure.dpi']
 # Only returns "you clicked on..." for now
 def on_click(fig, title, event):
     print("you clicked on", title)
+    test_command()
+
+
+def test_command():
+    print('howdy')
+    return
 
 
 # Register when the cursor enters the chart area and change the colour
@@ -76,12 +81,7 @@ class CreateCharts:
         self.axis = axis
         self.data = data
         self.frame = frame
-        if chart_type == "progress":
-            self.initiate_progress_bar()
-        elif chart_type == "bar":
-            self.initiate_bar_chart()
-        elif chart_type == "pie":
-            self.initiate_pie_chart()
+        self.initiate_chart()
 
     # Function takes in three parameters: title of the figure, axis names and data to display.
     # It creates and returns a pie chart using the matplotlib library.
@@ -117,35 +117,7 @@ class CreateCharts:
     # Makes a canvas on the current frame ID
     # Assigns usage of on_click and mouseover functions
     # Then draws the canvas
-    def initiate_pie_chart(self):
-        fig = self.create_chart()
-        canvas = FigureCanvasTkAgg(fig, master=self.frame)
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
-        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, self.title))
-        canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
-        canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
-        canvas.draw()
-
-    # Sends the title, plot data and axis titles to the bar chart creator
-    # Makes a canvas on the current frame ID
-    # Assigns usage of on_click and mouseover functions
-    # Then draws the canvas
-    def initiate_bar_chart(self):
-        fig = self.create_chart()
-        canvas = FigureCanvasTkAgg(fig, master=self.frame)
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
-        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, self.title))
-        canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
-        canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
-        canvas.draw()
-
-    # Sends the title and percentage to the progress bar creator
-    # Makes a canvas on the current frame ID
-    # Assigns usage of on_click and mouseover functions
-    # Then draws the canvas
-    def initiate_progress_bar(self):
+    def initiate_chart(self):
         fig = self.create_chart()
         canvas = FigureCanvasTkAgg(fig, master=self.frame)
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -163,16 +135,10 @@ class CreateGUI:
         self.gui()
 
 
-    def test_command(self):
-        print('howdy')
-        return
-
     def list_select(self, event):
         selection = event.widget.curselection()
         picked = event.widget.get(selection[0])
         ID = flipped_friends_dict[picked]['id']
-        print(picked)
-        print(ID)
         self.frame1.destroy()
         self.frame2.destroy()
         self.frame3.destroy()
@@ -181,6 +147,7 @@ class CreateGUI:
         self.frame6.destroy()
         self.steamid = ID
         self.frames(self.steamid)
+
 
     # Makes the root gui frames, top bar with title, profile button, friends list and under frame
     def gui(self):
@@ -195,7 +162,8 @@ class CreateGUI:
         title_bar.grid(row=0, column=1, columnspan=3, sticky="wsne")
         title_bar.grid_columnconfigure(2, weight=1)
 
-        title_label = tk.Label(title_bar, text="Steam Dashboard", font=(general_font, 30), fg=text_colour, bg=backboard_colour, anchor=tk.CENTER)
+        title_label = tk.Label(title_bar, text="Steam Dashboard", font=(general_font, 30), fg=text_colour,\
+                               bg=backboard_colour, anchor=tk.CENTER)
         title_label.grid(row=0, column=2, pady=screen_height/19.2)
 
         # PROFILE BUTTON
@@ -211,7 +179,8 @@ class CreateGUI:
         listbox_frame = tk.Frame(root, bg=background_colour)
         listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news')
 
-        friends_list = tk.Listbox(listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single', font=(general_font, 17), selectbackground=highlight_colour)
+        friends_list = tk.Listbox(listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single',\
+                                  font=(general_font, 17), selectbackground=highlight_colour)
         friends_list.config(highlightthickness=0)
         friends_list.bind("<<ListboxSelect>>", self.list_select)
         friends_list.pack(side='left', fill='y', expand=True)
@@ -243,14 +212,14 @@ class CreateGUI:
         yaxis_2weeks = []
         used_games = []
         recent_playtime = Ai.games2Weeks(steamid)
-        for i in recent_playtime:
-            xaxis_2weeks.append(recent_playtime[i]['name'])
-            yaxis_2weeks.append(recent_playtime[i]['playtime_2weeks'])
-            used_games.append(i)
-        print(used_games)
+        for game in recent_playtime:
+            xaxis_2weeks.append(recent_playtime[game]['name'])
+            yaxis_2weeks.append(recent_playtime[game]['playtime_2weeks'])
+            used_games.append(game)
         achievements = Ai.allAchievements(steamid, used_games[0])
-        print(achievements)
         recent_achievements = Ai.recentGamesAchievements(steamid, used_games[0])
+
+        print(recent_achievements)
         ach_percentage = achievements['achprocent']
 
         # FRAME 1
@@ -322,7 +291,12 @@ class Login:
             CreateGUI(user_id)
 
 
-
+'''class Details:
+    def __init__(self):
+        self.details_window = tk.Toplevel(root)
+        self.details_window.configure(bg=background_colour, width=screen_width, height=screen_height)
+        self.details_window.title('Details')
+'''
 
 
 Login()
