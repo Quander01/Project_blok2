@@ -211,7 +211,8 @@ def flipIDData(dic):
     De geflipte dictionary
     """
     cid = {}
-    for id, data in dic.items():
+    dicCopy = dic
+    for id, data in dicCopy.items():
         cid[data['name']], data['name'] = data, id
     return cid
 
@@ -368,4 +369,3 @@ def frequencyGamesAllFriends(steamId):
     top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
     return top5MostPlayed
 
-print(frequencyGamesAllFriends(steamId))
