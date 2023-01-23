@@ -6,7 +6,8 @@ key = '882B75E94431CD842CCD402F7E9C1A73'
 steamId = '76561198111929702'
 appId = '367520'
 
-#Algemene statistiek functies______________________________________
+
+# Algemene statistiek functies______________________________________
 def mergeSort(lst):
     """
     Sorteer functie met behulp van de divide en conquer methode.
@@ -15,19 +16,21 @@ def mergeSort(lst):
     Returns:
         list: Een list die gesorteerd is.
     """
-    #Hier begint het divide gedeelte van de sorteerfunctie
-    if len(lst) == 1:       #Als de lst maar een getal heeft, dan is deze lijst al gesorteerd
-        return lst          #en returnt het de lijst
+    # Hier begint het divide gedeelte van de sorteerfunctie
+    if len(lst) == 1:  # Als de lst maar een getal heeft, dan is deze lijst al gesorteerd
+        return lst  # en returnt het de lijst
 
     helft = int(len(lst) / 2)
-    lstA = lst[:helft]      #Hier wordt de lijst gesplitst in twee lijsten mocht dat mogelijk zijn
+    lstA = lst[:helft]  # Hier wordt de lijst gesplitst in twee lijsten mocht dat mogelijk zijn
     lstB = lst[helft:]
 
-    listA = mergeSort(lstA) #Hier komt de recursie call naar voren. Dus dan splitst het de lijst verder mocht dat mogelijk zijn
+    listA = mergeSort(
+        lstA)  # Hier komt de recursie call naar voren. Dus dan splitst het de lijst verder mocht dat mogelijk zijn
     listB = mergeSort(lstB)
 
-    #Hier gebeurt de conquer gedeelte van de sorteerfunctie
-    return merge(listA, listB)  #Hier wordt een de merge functie aangeroepen om de losse lijsten te mergen
+    # Hier gebeurt de conquer gedeelte van de sorteerfunctie
+    return merge(listA, listB)  # Hier wordt een de merge functie aangeroepen om de losse lijsten te mergen
+
 
 def merge(lstA, lstB):
     """
@@ -38,18 +41,20 @@ def merge(lstA, lstB):
     :param lstB (list): lijst met getallen
     :return: list: De gemerged en gesorteerde lijst van de twee parameters
     """
-    lstC = []               #Start met een lege lijst, wat uit eindelijk de nieuwe gesorteerde lijst wordt
+    lstC = []  # Start met een lege lijst, wat uit eindelijk de nieuwe gesorteerde lijst wordt
 
     while len(lstA) != 0 and len(lstB) != 0:
-        if lstA[0] > lstB[0]:       #Als de waarde van lstA op index 0 groter is dan die van lstB
-            lstC.append(lstB[0])    #Dan wordt de kleinere waarde in de nieuwe lijst gestopt op het einde, omdat dat dan de laatste en grootste waarde zal zijn die toegevoegd zal zijn.
-            lstB.remove(lstB[0])    #Vervolgens wordt diezelfde waarde uit de lijst gehaald
+        if lstA[0] > lstB[0]:  # Als de waarde van lstA op index 0 groter is dan die van lstB
+            lstC.append(lstB[
+                            0])  # Dan wordt de kleinere waarde in de nieuwe lijst gestopt op het einde, omdat dat dan de laatste en grootste waarde zal zijn die toegevoegd zal zijn.
+            lstB.remove(lstB[0])  # Vervolgens wordt diezelfde waarde uit de lijst gehaald
         else:
-            lstC.append(lstA[0])    #Mocht de waarde van lstA[0] niet groter zijn, dan wordt er hetzelfde gedaan als hierboven maar dan voor lstA
+            lstC.append(lstA[
+                            0])  # Mocht de waarde van lstA[0] niet groter zijn, dan wordt er hetzelfde gedaan als hierboven maar dan voor lstA
             lstA.remove(lstA[0])
 
-    #Mocht de ene lijst langer zijn dan de ander, vanwege een oneven lengte bijvoorbeeld, dan worden die waarden
-    #nog aan het einde van de nieuwe lijst geplakt
+    # Mocht de ene lijst langer zijn dan de ander, vanwege een oneven lengte bijvoorbeeld, dan worden die waarden
+    # nog aan het einde van de nieuwe lijst geplakt
     while len(lstA) != 0:
         lstC.append(lstA[0])
         lstA.remove(lstA[0])
@@ -59,6 +64,7 @@ def merge(lstA, lstB):
         lstB.remove(lstB[0])
 
     return lstC
+
 
 def bigToSmallSort(lst):
     """
@@ -75,6 +81,7 @@ def bigToSmallSort(lst):
         revLst.append(List[i])
     return revLst
 
+
 def freq(lst):
     """
     Bepaal de frequenties van alle getallen in een lijst.
@@ -90,12 +97,13 @@ def freq(lst):
         {1: 3, 2: 2, 3: 1}
     """
     freqs = {}
-    for getal in lst:                       #Een teller met behulp van een dictionary, met als getal de key en het aantal de value van de key
-        if getal not in freqs.keys():       #Als een waarde niet in de dictionary zit, wordt er een nieuwe key gemaakt met de getal
+    for getal in lst:  # Een teller met behulp van een dictionary, met als getal de key en het aantal de value van de key
+        if getal not in freqs.keys():  # Als een waarde niet in de dictionary zit, wordt er een nieuwe key gemaakt met de getal
             freqs[getal] = 1
-        else:                               #Als het er wel al in staat gaat de teller 1 omhoog
+        else:  # Als het er wel al in staat gaat de teller 1 omhoog
             freqs[getal] += 1
     return freqs
+
 
 def binary_search_index(lst, target):
     """
@@ -117,17 +125,18 @@ def binary_search_index(lst, target):
         if len(lst_part) == 0:
             break
         elif target < lst_part[half]:
-            lst_part = lst_part[:half]  #lower half
+            lst_part = lst_part[:half]  # lower half
             index = index[:half]
         elif target > lst_part[half]:
-            lst_part = lst_part[half + 1:]  #Upper half
+            lst_part = lst_part[half + 1:]  # Upper half
             index = index[half + 1:]
         elif target == lst_part[half]:
             foundIn = index[half]
             found = True
     return foundIn
 
-#Specifieke methoden met API-calls_________________________________
+
+# Specifieke methoden met API-calls_________________________________
 
 def friendlistData(steamId):
     """
@@ -139,7 +148,7 @@ def friendlistData(steamId):
     Returns:
     Een dictionary van alle vrienden met de steamid als de key en de naam als waarde
     """
-    #Mocht de profiel prive zijn, dan zal er een error ontstaan, dus alles in een try gezet.
+    # Mocht de profiel prive zijn, dan zal er een error ontstaan, dus alles in een try gezet.
     try:
         # Data van API krijgen
         friendlist = requests.get(
@@ -161,12 +170,13 @@ def friendlistData(steamId):
         friendsJson = request.json()
         frnDic = {}
         for friend in friendsJson['response']['players']:
-            frnDic[friend['steamid']] = {'name': friend['personaname'], 'avatar':friend['avatarmedium']}
+            frnDic[friend['steamid']] = {'name': friend['personaname'], 'avatar': friend['avatarmedium']}
 
-    #Is de profiel prive, dan is de dictionary leeg
+    # Is de profiel prive, dan is de dictionary leeg
     except:
-        frnDic = {}
+        frnDic = 0
     return frnDic
+
 
 def sortedFriends(steamId, key):
     """
@@ -198,9 +208,10 @@ def sortedFriends(steamId, key):
             srtLst = mergeSort(lst)
 
     except:
-        pass
+        srtLst = 0
 
     return srtLst
+
 
 def flipIDData(dic):
     """
@@ -211,9 +222,11 @@ def flipIDData(dic):
     De geflipte dictionary
     """
     cid = {}
-    for id, data in dic.items():
-        cid[data['name']], data['name'] = data, id
+    dicCopy = dic
+    for id, data in dicCopy.items():
+        cid[data['name']] = {'id': id, 'avatar': data['avatar']}
     return cid
+
 
 def games2Weeks(steamId):
     """
@@ -223,9 +236,9 @@ def games2Weeks(steamId):
     Returns:
     Een dictionary met de id van de game als key en naam van de game als value
     """
-    #Als de profiel prive is gaat er een error komen
+    # Als de profiel prive is gaat er een error komen
     try:
-        #De API call
+        # De API call
         recentlyGames = requests.get(
             f'http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key={key}&steamid={steamId}&format=json')
         recGa = recentlyGames.json()
@@ -234,15 +247,17 @@ def games2Weeks(steamId):
         i = 0
         for game in recGa['response']['games']:
             if i < 3:
-                games2weeks[game['appid']] = {'name': game['name'], 'playtime_2weeks': game['playtime_2weeks'], 'playtime': game['playtime_forever']}
+                games2weeks[game['appid']] = {'name': game['name'], 'playtime_2weeks': game['playtime_2weeks'],
+                                              'playtime': game['playtime_forever']}
             else:
                 break
             i += 1
 
-    #Dus als het prive is dan geeft het een lege dictionary terug
+    # Dus als het prive is dan geeft het een lege dictionary terug
     except:
-        games2weeks = {}
+        games2weeks = 0
     return games2weeks
+
 
 def ownedGames(steamId):
     """
@@ -252,19 +267,21 @@ def ownedGames(steamId):
     Returns:
     Dictionary met id als key en data als value
     """
-    oGaDic = {}
-    #Als de profiel prive is gaat er een error komen
+    # Als de profiel prive is gaat er een error komen
     try:
-        #De API call
-        ownedGames = requests.get(f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={key}&steamid={steamId}&format=json&include_appinfo=True&include_played_free_games=True')
+        # De API call
+        ownedGames = requests.get(
+            f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={key}&steamid={steamId}&format=json&include_appinfo=True&include_played_free_games=True')
         oGa = ownedGames.json()
 
+        oGaDic = {}
         for game in oGa['response']['games']:
             oGaDic[game['appid']] = {'name': game['name'], 'playtime': game['playtime_forever']}
 
-    #Dus als het prive is dan geeft het een lege dictionary terug
+    # Dus als het prive is dan geeft het een lege dictionary terug
     except:
-        pass
+        oGaDic = 0
+
     return oGaDic
 
 
@@ -276,8 +293,7 @@ def allAchievements(steamId, appId):
     :return:
     """
     achDic = {}
-    achDicStats = {}
-    #Is een profiel prive dan zal er een foutmelding komen
+    # Is een profiel prive dan zal er een foutmelding komen
     try:
         playerAchievements = requests.get(
             f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
@@ -286,17 +302,21 @@ def allAchievements(steamId, appId):
         tot = 0
         achieved = 0
         for achievement in plyAch['playerstats']['achievements']:
-            achDic[achievement['apiname']] = {'achieved': achievement['achieved'], 'unlocktime': achievement['unlocktime']}
+            achDic[achievement['apiname']] = {'achieved': achievement['achieved'],
+                                              'unlocktime': achievement['unlocktime']}
             if achievement['achieved']:
                 achieved += 1
             tot += 1
-        achDicStats = {'achTot': tot, 'achAchieved': achieved, 'achprocent': (achieved/tot) * 100, 'achievements': achDic}
+        achDicStats = {'achTot': tot, 'achAchieved': achieved, 'achprocent': (achieved / tot) * 100,
+                       'achievements': achDic}
 
-    #Dus zal de dictionary leeg zijn
+    # Dus zal de dictionary leeg zijn
     except:
-        pass
+        achDicStats = 0
 
     return achDicStats
+
+
 def recentGamesAchievements(steamId, appId):
     """
     Returns the recently achieved achievements of a certain game
@@ -305,30 +325,31 @@ def recentGamesAchievements(steamId, appId):
     :return:
     dictionary met twee lijsten
     """
-    recAchDic = {}
-
-
     achDic = allAchievements(steamId, appId)
 
-    #Zorgt ervoor de dat unlocktime de key wordt en de naam de "unlocktime" wordt
-    ciDhca = {}
-    for name, data in achDic['achievements'].items():
-        ciDhca[data['unlocktime']], data['unlocktime'] = data, name
+    # Checkt of de lijst leeg is of niet
+    if achDic != 0:
+        # Zorgt ervoor de dat unlocktime de key wordt en de naam de "unlocktime" wordt
+        ciDhca = {}
+        for name, data in achDic['achievements'].items():
+            ciDhca[data['unlocktime']], data['unlocktime'] = data, name
 
-    #Hier wordt alle
-    times = []
-    for time in ciDhca.keys():
-        times.append(time)
-    recUnlockTime = bigToSmallSort(times)
+        # Hier wordt alle
+        times = []
+        for time in ciDhca.keys():
+            times.append(time)
+        recUnlockTime = bigToSmallSort(times)
 
-    recAch = []
-    for time in recUnlockTime[:4]:
-        recAch.append(ciDhca[time]['unlocktime'])
+        recAch = []
+        for time in recUnlockTime[:4]:
+            recAch.append(ciDhca[time]['unlocktime'])
 
-    recAchDic = {'time': recUnlockTime[:4], 'name': recAch}
-
+        recAchDic = {'time': recUnlockTime[:4], 'name': recAch}
+    else:
+        recAchDic = 0
 
     return recAchDic
+
 
 def frequencyGamesAllFriends(steamId):
     """
@@ -338,32 +359,37 @@ def frequencyGamesAllFriends(steamId):
     dictionary met twee gesorteerde lijsten. Lijst met namen en frequenties
     """
     friendsDic = friendlistData(steamId)
-    lstAllName = []
-    for id in friendsDic.keys():
-        ownGamDic = ownedGames(id)
-        if len(ownGamDic) != 0:
-            for name in ownGamDic.values():
-                lstAllName.append(name['name'])
+    if friendsDic != 0:
+        lstAllName = []
+        for id in friendsDic.keys():
+            ownGamDic = ownedGames(id)
+            if ownGamDic != 0:
+                for name in ownGamDic.values():
+                    lstAllName.append(name['name'])
 
-    freqDic = freq(lstAllName)
-    copyDic = freqDic
+        freqDic = freq(lstAllName)
+        copyDic = freqDic
 
-    frequencies = []
-    for fre in copyDic.values():
-        frequencies.append(fre)
-    stbFre = mergeSort(frequencies)
-    btsFre = bigToSmallSort(stbFre)
-    top5 = btsFre[:6]
-    copy5 = top5
+        frequencies = []
+        for fre in copyDic.values():
+            frequencies.append(fre)
+        stbFre = mergeSort(frequencies)
+        btsFre = bigToSmallSort(stbFre)
+        top5 = btsFre[:5]
+        copy5 = top5
 
-    names = []
-    while len(copy5) != 0:
-        for name, frequency in copyDic.items():
-            if copy5[0] == copyDic[name]:
-                names.append(name)
-                copy5.pop(0)
-                copyDic.pop(name)
-                break
+        names = []
+        while len(copy5) != 0:
+            for name, frequency in copyDic.items():
+                if copy5[0] == copyDic[name]:
+                    names.append(name)
+                    copy5.pop(0)
+                    copyDic.pop(name)
+                    break
 
-    top10MostPlayed = {'name': names, 'frequency': btsFre[:6]}
-    return top10MostPlayed
+        top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
+    else:
+        top5MostPlayed = 0
+    return top5MostPlayed
+
+
