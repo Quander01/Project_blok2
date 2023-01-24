@@ -471,13 +471,9 @@ def frequencyGamesAllFriends(steamId):
                 for name in ownGamDic.values():
                     lstAllName.append(name['name'])
 
-    frequencies = []
-    for fre in copyDic.values():
-        frequencies.append(fre)
-    stbFre = mergeSort(frequencies)
-    btsFre = bigToSmallSort(stbFre)
-    top5 = btsFre[:5]
-    copy5 = top5
+        # Telt de frequentie van alle games
+        freqDic = freq(lstAllName)
+        copyDic = freqDic
 
         frequencies = []
         for fre in copyDic.values():
@@ -487,5 +483,52 @@ def frequencyGamesAllFriends(steamId):
         top5 = btsFre[:5]
         copy5 = top5
 
-    top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
+        names = []
+        # Pakt de 5 hoogste frequenties van de frequentieteller van de games
+        # Gaat door alle games heen om te kijken welke dezelfde frequentie heeft
+        # Verwijdert uit beide de lijst en dictionary om dubbele data te verkomen
+        while len(copy5) != 0:
+            for name, frequency in copyDic.items():
+                if copy5[0] == copyDic[name]:
+                    names.append(name)
+                    copy5.pop(0)
+                    copyDic.pop(name)
+                    break
+
+        top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
     return top5MostPlayed
+
+
+def averageGames2Weeks(steamId):
+    """
+    Berekent de gemiddelde speeltijd van de spellen
+    van afgelopen 2 weken.
+    :param steamId:
+    De steamId wiens gegevens we willen.
+    :return:
+    Returnt het aantal minuten gemiddeld tussen alle spellen.
+    """
+    # Als de ingevulde steamID niet valide is, dan return 0
+    try:
+        recentlyGames = requests.get(
+            f'http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key={key}&steamid={steamId}&format=json')
+        recGa = recentlyGames.json()
+    except requests.exceptions.JSONDecodeError:
+        return 0
+
+    # Als het profiel leeg is dan de return van de api {'response': {}}, dus return 0
+    if privateChecker(steamId):
+        average = 0
+    # Als het profiel wel publiek is, maar gameslijst prive is
+    elif len(recGa['response']) == 0:
+        average = 0
+    # Als het profiel afgelopen twee weken niet gespeeld heeft
+    elif recGa['response']['total_count'] == 0:
+        average = 0
+    else:
+        speeltijdenLst = []
+        for game in recGa['response']['games']:
+            speeltijdenLst.append(game['playtime_2weeks'])
+
+        average = mean(speeltijdenLst)
+    return average
