@@ -1,6 +1,4 @@
 import requests
-import threading
-from datetime import datetime
 
 key = '882B75E94431CD842CCD402F7E9C1A73'
 steamId = '76561198111929702'
@@ -24,9 +22,8 @@ def mergeSort(lst):
     lstA = lst[:helft]  # Hier wordt de lijst gesplitst in twee lijsten mocht dat mogelijk zijn
     lstB = lst[helft:]
 
-    listA = mergeSort(
-        lstA)  # Hier komt de recursie call naar voren. Dus dan splitst het de lijst verder mocht dat mogelijk zijn
-    listB = mergeSort(lstB)
+    listA = mergeSort(lstA)  # Hier komt de recursie call naar voren.
+    listB = mergeSort(lstB)  # Dus dan splitst het de lijst verder mocht dat mogelijk zijn
 
     # Hier gebeurt de conquer gedeelte van de sorteerfunctie
     return merge(listA, listB)  # Hier wordt een de merge functie aangeroepen om de losse lijsten te mergen
@@ -37,20 +34,26 @@ def merge(lstA, lstB):
     Deze functie zorgt voor het sorteren en mergen van de lijsten.
     Het principe van deze functie is dat de functie al gedeeltelijk gesorteerde lijsten binnen krijgt.
     Hierdoor is de vergelijking alleen nodig voor de eerste index.
-    :param lstA (list): lijst met getallen
-    :param lstB (list): lijst met getallen
+    :param lstA: lijst met getallen
+    :param lstB: lijst met getallen
     :return: list: De gemerged en gesorteerde lijst van de twee parameters
     """
-    lstC = []  # Start met een lege lijst, wat uit eindelijk de nieuwe gesorteerde lijst wordt
+    # Start met een lege lijst, wat uit eindelijk de nieuwe gesorteerde lijst wordt
+    lstC = []
 
     while len(lstA) != 0 and len(lstB) != 0:
-        if lstA[0] > lstB[0]:  # Als de waarde van lstA op index 0 groter is dan die van lstB
-            lstC.append(lstB[
-                            0])  # Dan wordt de kleinere waarde in de nieuwe lijst gestopt op het einde, omdat dat dan de laatste en grootste waarde zal zijn die toegevoegd zal zijn.
-            lstB.remove(lstB[0])  # Vervolgens wordt diezelfde waarde uit de lijst gehaald
+        # Als de waarde van lstA op index 0 groter is dan die van lstB,
+        # dan wordt de kleinere waarde in de nieuwe lijst gestopt op het einde,
+        # omdat dat dan de laatste en grootste waarde zal zijn die toegevoegd zal zijn.
+        # Vervolgens wordt diezelfde waarde uit de lijst gehaald
+        if lstA[0] > lstB[0]:
+            lstC.append(lstB[0])
+            lstB.remove(lstB[0])
+
+        # Mocht de waarde van lstA[0] niet groter zijn,
+        # dan wordt er hetzelfde gedaan als hierboven maar dan voor lstA
         else:
-            lstC.append(lstA[
-                            0])  # Mocht de waarde van lstA[0] niet groter zijn, dan wordt er hetzelfde gedaan als hierboven maar dan voor lstA
+            lstC.append(lstA[0])
             lstA.remove(lstA[0])
 
     # Mocht de ene lijst langer zijn dan de ander, vanwege een oneven lengte bijvoorbeeld, dan worden die waarden
@@ -75,7 +78,6 @@ def bigToSmallSort(lst):
     Gesoorterde lijst
     """
     List = mergeSort(lst)
-    index = -1
     revLst = []
     for i in range(-1, -(len(List) + 1), -1):
         revLst.append(List[i])
@@ -97,8 +99,9 @@ def freq(lst):
         {1: 3, 2: 2, 3: 1}
     """
     freqs = {}
-    for getal in lst:  # Een teller met behulp van een dictionary, met als getal de key en het aantal de value van de key
-        if getal not in freqs.keys():  # Als een waarde niet in de dictionary zit, wordt er een nieuwe key gemaakt met de getal
+    for getal in lst:
+        # Als een waarde niet in de dictionary zit, wordt er een nieuwe key gemaakt met de getal
+        if getal not in freqs.keys():
             freqs[getal] = 1
         else:  # Als het er wel al in staat gaat de teller 1 omhoog
             freqs[getal] += 1
@@ -120,7 +123,7 @@ def binary_search_index(lst, target):
     foundIn = -1
     for i in range(0, len(lst)):
         index.append(i)
-    while found == False:  # hoelang ga je door met zoeken?
+    while not found:  # hoelang ga je door met zoeken?
         half = int(len(lst_part) / 2)
         if len(lst_part) == 0:
             break
@@ -136,7 +139,48 @@ def binary_search_index(lst, target):
     return foundIn
 
 
+def mean(lst):
+    """
+    Bepaal het gemiddelde van een lijst getallen.
+    De standaard formule wordt gebruikt van gemiddelde
+    namelijk alle waarden van een lijst plus elkaar
+    gedeeld door aantal waarden
+    Args:
+        lst (list): Een lijst met gehele getallen.
+    Returns:
+        float: Het gemiddelde van de gegeven getallen.
+    """
+    plus = 0
+    for getal in lst:
+        plus = plus + getal  # Hier worden alle waarden bij elkaar opgeteld
+    return plus / len(lst)  # Hier is de deling met het aantal waarden
+
+
 # Specifieke methoden met API-calls_________________________________
+
+def privateChecker(steamId):
+    """
+    Controleert of een account prive is of niet
+    :param steamId: steamId van gevraagde account
+    :return:
+    een boolean die aangeeft of de account prive is of niet
+    """
+    try:
+        request = requests.get(
+                f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={steamId}')
+        userData = request.json()
+    except requests.exceptions.JSONDecodeError:
+        return True
+
+    # Geeft 1 als het prive is
+    if userData['response']['players'][0]['communityvisibilitystate'] == 1:
+        private = True
+    # Geeft 3 als het openbaar is
+    elif userData['response']['players'][0]['communityvisibilitystate'] == 3:
+        private = False
+
+    return private
+
 
 def friendlistData(steamId):
     """
@@ -144,37 +188,47 @@ def friendlistData(steamId):
     request voor alle vrienden van een bepaalde steam user. Deze informatie
     wordt verwerkt in een dictionary.
     Args:
-        steamid: steamId van de gevraagde user
+        steamId: steamId van de gevraagde user
     Returns:
-    Een dictionary van alle vrienden met de steamid als de key en de naam als waarde
+    Een dictionary van alle vrienden met de steamid als de key en de naam en profielfoto als waarde
     """
-    # Mocht de profiel prive zijn, dan zal er een error ontstaan, dus alles in een try gezet.
+    # Als de ingevulde steamID invalid is, return 0
     try:
-        # Data van API krijgen
+        # Functie dat data van een externe bron binnenhaalt
         friendlist = requests.get(
-            f'http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key={key}&steamid={steamId}&relationship=friend')
+            f'https://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key={key}&steamid={steamId}&relationship=friend')
         frnJson = friendlist.json()
 
+    # Als de ingevulde steamId niet klopt dan geeft het een 0 terug
+    except requests.exceptions.JSONDecodeError:
+        return 0
+
+    # Er wordt gecheckt of het profiel prive is of niet. Is het wel prive, dan return 0
+    if privateChecker(steamId):
+        frnDic = 0
+    # De API zal een lege dictionary returnen als het profiel geen vrienden heeft
+    elif len(frnJson['friendslist']['friends']) == 0:
+        frnDic = 0
+    else:
         # Aantal vrienden
         friends = 0
         for friend in frnJson['friendslist']['friends']:
             friends = friends + 1
 
         # Maakt lange string aan met de ID's uit de friendslist die
+        # in de Api-call gedaan wordt.
         frnsIDs = ''
         for friend in frnJson['friendslist']['friends']:
             frnsIDs += f'{friend["steamid"]},'
 
+        # frnsIDs wordt in de API als argument ingevuld
         request = requests.get(
-            f'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={frnsIDs}')
+            f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={frnsIDs}')
         friendsJson = request.json()
         frnDic = {}
         for friend in friendsJson['response']['players']:
             frnDic[friend['steamid']] = {'name': friend['personaname'], 'avatar': friend['avatarmedium']}
 
-    # Is de profiel prive, dan is de dictionary leeg
-    except:
-        frnDic = 0
     return frnDic
 
 
@@ -186,28 +240,46 @@ def sortedFriends(steamId, key):
     :return:
     Een gesorteerde lijst met namen of id's
     """
-    try:
-        dic = friendlistData(steamId)
+    dic = friendlistData(steamId)
+
+    # Als de friendlistData() functie niks terug geeft dan geeft de functie 0 terug
+    if dic != 0:
+        # lst is de lijst met alle id's of namen
+        # srtLst is de gesorteerde lijst
         lst = []
-        lstIndexDic = {}
-        lstLowerIndexDic = {}
-        index = 0
         srtLst = []
+
+        # Sorteren op alfabetische volgorde
         if key == 0:
+            lstIndexDic = {}
+            lstLowerIndexDic = {}
+            index = 0
+
+            # Twee dictionaries worden gebruikt om data terug te kunnen vinden
             for name in dic.values():
+                # Slaat de naam in lowercase op in lst
                 lst.append(name['name'].lower())
+
+                # Slaat de oude locatie op van elke naam in een
+                # dictionary met de oude index als key en naam zonder wijziging op
                 lstIndexDic[index] = name['name']
+
+                # Andere dictionary met de lowercased naam als key en de oude index als value
                 lstLowerIndexDic[name['name'].lower()] = index
                 index += 1
             srtLstLower = mergeSort(lst)
+
+            # Vult de gesorteerde lowercased namen in de dictionary
+            # met oude index om de originele naam terug te krijgen
             for name in srtLstLower:
                 srtLst.append(lstIndexDic[lstLowerIndexDic[name]])
+
+        # Sorteren op id
         elif key == 1:
             for id in dic.keys():
                 lst.append(id)
             srtLst = mergeSort(lst)
-
-    except:
+    else:
         srtLst = 0
 
     return srtLst
@@ -215,11 +287,11 @@ def sortedFriends(steamId, key):
 
 def flipIDData(dic):
     """
-    Flipt een dictionary mocht het handig zijn om te sorteren op alfabetische volgorde ipv id's
+    Maakt een nieuwe dictionary aan die de plaats van id en naam verandert
     Args:
-        dic: Dictionary met id als key en naam als waarde
+        dic: Dictionary met id als key en naam en profielfoto als waarde
     Returns:
-    De geflipte dictionary
+    Dezelfde dictionary, maar met naam als key en id en profielfoto als waarde
     """
     cid = {}
     dicCopy = dic
@@ -230,19 +302,32 @@ def flipIDData(dic):
 
 def games2Weeks(steamId):
     """
-    Zoekt op wat de laatste games zijn die de user heeft gespeeld afgelopen twee weken
+    Zoekt op wat de laatste drie games zijn die de user heeft gespeeld afgelopen twee weken
     Args:
         steamId: Steamid van gevraagde user
     Returns:
-    Een dictionary met de id van de game als key en naam van de game als value
+    Een dictionary met de id van de game als key en naam, speeltijd van afgelopen
+    twee weken en algemene speeltijd van de game als value
     """
-    # Als de profiel prive is gaat er een error komen
+    # Als de ingevulde waarde niet klopt dan return 0
     try:
         # De API call
         recentlyGames = requests.get(
             f'http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key={key}&steamid={steamId}&format=json')
         recGa = recentlyGames.json()
+    except requests.exceptions.JSONDecodeError:
+        return 0
 
+    # Als het profiel prive is, dan return 0
+    if privateChecker(steamId):
+        games2weeks = 0
+    # Als het profiel publiek is, maar gameslijst prive, return 0
+    elif len(recGa['response']) ==0:
+        games2weeks = 0
+    # Als het profiel geen games heeft afgelopen twee weken, dan return 0
+    elif recGa['response']['total_count'] == 0:
+        games2weeks = 0
+    else:
         games2weeks = {}
         i = 0
         for game in recGa['response']['games']:
@@ -252,55 +337,71 @@ def games2Weeks(steamId):
             else:
                 break
             i += 1
-
-    # Dus als het prive is dan geeft het een lege dictionary terug
-    except:
-        games2weeks = 0
     return games2weeks
 
 
 def ownedGames(steamId):
     """
-    Pakt alle informatie over owned games
+    Haalt alle informatie op over owned games
     Args:
         steamId: steamid van user
     Returns:
-    Dictionary met id als key en data als value
+    Dictionary met id als key en naam en speeltijd als value
     """
-    # Als de profiel prive is gaat er een error komen
+    # Als het ingevulde steamID invalide is, dan return 0
     try:
         # De API call
         ownedGames = requests.get(
             f'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={key}&steamid={steamId}&format=json&include_appinfo=True&include_played_free_games=True')
         oGa = ownedGames.json()
+    except requests.exceptions.JSONDecodeError:
+        return 0
 
+    # Als het profiel prive is, dan return 0
+    if privateChecker(steamId):
+        oGaDic = 0
+    # Als het profiel publiek is, maar gameslijst wel prive
+    elif len(oGa['response']) == 0:
+        oGaDic = 0
+    # Als het profiel geen spellen heeft dan is de gamecount 0 dus return 0
+    elif oGa['response']['game_count'] == 0:
+        oGaDic = 0
+    else:
         oGaDic = {}
         for game in oGa['response']['games']:
             oGaDic[game['appid']] = {'name': game['name'], 'playtime': game['playtime_forever']}
-
-    # Dus als het prive is dan geeft het een lege dictionary terug
-    except:
-        oGaDic = 0
 
     return oGaDic
 
 
 def allAchievements(steamId, appId):
     """
-    Gets achievements data
-    :param steamId:
-    :param appId:
+    Haalt de achievementdata op van een bepaalde game van een user
+    :param steamId: SteamID van de gevraagde gebruiker
+    :param appId: AppID van de gevraagde game
     :return:
+    dictionary met totale achievements, aantal behaalde, behaalde percentage
+    en een dictionary met alle achievements
     """
     achDic = {}
-    # Is een profiel prive dan zal er een foutmelding komen
+    # Is de steamID of appID invalide dan returnt het 0
     try:
         playerAchievements = requests.get(
             f'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid={appId}&key={key}&steamid={steamId}')
         plyAch = playerAchievements.json()
+    except requests.exceptions.JSONDecodeError:
+        return 0
 
+    # Als het profiel prive is, dan return 0
+    if privateChecker(steamId):
+        achDicStats = 0
+    # Als het profiel het spel niet heeft, dan return 0
+    elif not plyAch['playerstats']['success']:
+        achDicStats = 0
+    else:
         tot = 0
         achieved = 0
+        # Dictionary van de achievements met naam als key en behaalde status en behaalde tijdstip als value
         for achievement in plyAch['playerstats']['achievements']:
             achDic[achievement['apiname']] = {'achieved': achievement['achieved'],
                                               'unlocktime': achievement['unlocktime']}
@@ -309,10 +410,6 @@ def allAchievements(steamId, appId):
             tot += 1
         achDicStats = {'achTot': tot, 'achAchieved': achieved, 'achprocent': (achieved / tot) * 100,
                        'achievements': achDic}
-
-    # Dus zal de dictionary leeg zijn
-    except:
-        achDicStats = 0
 
     return achDicStats
 
@@ -323,18 +420,22 @@ def recentGamesAchievements(steamId, appId):
     :param steamId: steamid van user waarvan je info wil hebben
     :param appId: appid van de app die gevraagd wordt
     :return:
-    dictionary met twee lijsten
+    dictionary met twee lijsten: een lijst met gesorteerde tijden
+    en een lijst met de bijbehorende behaalde achievements op die tijden
     """
     achDic = allAchievements(steamId, appId)
 
     # Checkt of de lijst leeg is of niet
-    if achDic != 0:
+    if achDic == 0:
+        recAchDic = 0
+    else:
         # Zorgt ervoor de dat unlocktime de key wordt en de naam de "unlocktime" wordt
         ciDhca = {}
         for name, data in achDic['achievements'].items():
             ciDhca[data['unlocktime']], data['unlocktime'] = data, name
 
-        # Hier wordt alle
+        # Hier wordt alle tijden van de behaalde achievements in een lijst gezet en die wordt
+        # gesorteerd op meest recent
         times = []
         for time in ciDhca.keys():
             times.append(time)
@@ -345,8 +446,6 @@ def recentGamesAchievements(steamId, appId):
             recAch.append(ciDhca[time]['unlocktime'])
 
         recAchDic = {'time': recUnlockTime[:4], 'name': recAch}
-    else:
-        recAchDic = 0
 
     return recAchDic
 
@@ -359,7 +458,12 @@ def frequencyGamesAllFriends(steamId):
     dictionary met twee gesorteerde lijsten. Lijst met namen en frequenties
     """
     friendsDic = friendlistData(steamId)
-    if friendsDic != 0:
+
+    # Als het profiel leeg is dan geeft het 0 terug
+    if friendsDic == 0:
+        top5MostPlayed = 0
+    else:
+        # List met alle namen van alle games die de vrienden heeft van de gebruiker
         lstAllName = []
         for id in friendsDic.keys():
             ownGamDic = ownedGames(id)
@@ -367,6 +471,7 @@ def frequencyGamesAllFriends(steamId):
                 for name in ownGamDic.values():
                     lstAllName.append(name['name'])
 
+        # Telt de frequentie van alle games
         freqDic = freq(lstAllName)
         copyDic = freqDic
 
@@ -379,6 +484,9 @@ def frequencyGamesAllFriends(steamId):
         copy5 = top5
 
         names = []
+        # Pakt de 5 hoogste frequenties van de frequentieteller van de games
+        # Gaat door alle games heen om te kijken welke dezelfde frequentie heeft
+        # Verwijdert uit beide de lijst en dictionary om dubbele data te verkomen
         while len(copy5) != 0:
             for name, frequency in copyDic.items():
                 if copy5[0] == copyDic[name]:
@@ -388,8 +496,39 @@ def frequencyGamesAllFriends(steamId):
                     break
 
         top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
-    else:
-        top5MostPlayed = 0
     return top5MostPlayed
 
 
+def averageGames2Weeks(steamId):
+    """
+    Berekent de gemiddelde speeltijd van de spellen
+    van afgelopen 2 weken.
+    :param steamId:
+    De steamId wiens gegevens we willen.
+    :return:
+    Returnt het aantal minuten gemiddeld tussen alle spellen.
+    """
+    # Als de ingevulde steamID niet valide is, dan return 0
+    try:
+        recentlyGames = requests.get(
+            f'http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key={key}&steamid={steamId}&format=json')
+        recGa = recentlyGames.json()
+    except requests.exceptions.JSONDecodeError:
+        return 0
+
+    # Als het profiel leeg is dan de return van de api {'response': {}}, dus return 0
+    if privateChecker(steamId):
+        average = 0
+    # Als het profiel wel publiek is, maar gameslijst prive is
+    elif len(recGa['response']) == 0:
+        average = 0
+    # Als het profiel afgelopen twee weken niet gespeeld heeft
+    elif recGa['response']['total_count'] == 0:
+        average = 0
+    else:
+        speeltijdenLst = []
+        for game in recGa['response']['games']:
+            speeltijdenLst.append(game['playtime_2weeks'])
+
+        average = mean(speeltijdenLst)
+    return average
