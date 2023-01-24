@@ -298,6 +298,10 @@ def allAchievements(steamId, appId):
         pass
 
     return achDicStats
+
+def profile_checker(steamid):
+    return 1
+
 def recentGamesAchievements(steamId, appId):
     """
     Returns the recently achieved achievements of a certain game

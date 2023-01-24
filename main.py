@@ -7,37 +7,57 @@ from webbrowser import open
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-
 from AI import Ai
-
 matplotlib.use("TkAgg")
 
-root = tk.Tk()
-screen_height = int(root.winfo_screenheight()/1.2)
-screen_width = int(screen_height*16/9)
-root.geometry("{}x{}".format(screen_width, screen_height))
-text_colour = '#c7d5e0'                                         # slightly blue white-ish
-background_colour = '#1b2838'                                   # steam dark blue
-figure_colour = '#2a475e'                                       # steam blue
-backboard_colour = '#232323'                                    # steam dark grey
-highlight_colour = '#66c0f4'                                    # steam light blue
-graph_frame_padx = screen_width/170.6
-graph_frame_pady = screen_height/96
-general_font = 'Arial'
-plt.rcParams['text.color'] = text_colour
-px = 1/plt.rcParams['figure.dpi']
+
+# declares all globals for styling
+if __name__ == '__main__':
+    root = tk.Tk()
+    # screen sizes
+    screen_height = int(root.winfo_screenheight()/1.2)
+    screen_width = int(root.winfo_screenwidth()/1.2)
+    x = (screen_width/10)
+    y = (screen_height/10)
+
+    # overlay window sizes
+    overlay_window_height = int(screen_height/1.2)
+    overlay_window_width = int(screen_width/1.2)
+    overlay_x = (screen_width/2) - (overlay_window_width/2.6)
+    overlay_y = (screen_width/2) - (overlay_window_height/1.2)
+
+    # popup window sizes
+    popup_window_height = int(screen_height/4)
+    popup_window_width = int(screen_width/4)
+    popup_x = (screen_width/2) - (popup_window_width/8)
+    popup_y = (screen_width/2) - (popup_window_height*2)
+
+    # root window configuration
+    root.geometry("{}x{}".format(screen_width, screen_height))
+    root.geometry(f'{screen_width}x{screen_height}+{int(x)}+{int(y)}')
+
+    # Colour assignments
+    text_colour = '#c7d5e0'                                         # slightly blue white-ish
+    background_colour = '#1b2838'                                   # steam dark blue
+    figure_colour = '#2a475e'                                       # steam blue
+    backboard_colour = '#232323'                                    # steam dark grey
+    highlight_colour = '#66c0f4'                                    # steam light blue
+
+    # Graph sizes
+    graph_frame_padx = screen_width/170.6
+    graph_frame_pady = screen_height/96
+
+    # Font management
+    general_font = 'Arial'
+    plt.rcParams['text.color'] = text_colour
+    px = 1/plt.rcParams['figure.dpi']
 
 
 # Function to open the info windows when clicking on charts
-# Only returns "you clicked on..." for now
+# takes the title of the selected graph
 def on_click(fig, title, event):
     print("you clicked on", title)
-    test_command()
-
-
-def test_command():
-    print('howdy')
-    return
+    Details()
 
 
 # Register when the cursor enters the chart area and change the colour
@@ -51,12 +71,13 @@ def on_leave(fig, canvas, event):
     fig.set_facecolor(figure_colour)
     canvas.draw()
 
-
+# button to return to your own data, only rickrolls you now
 def show_profile():
     open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
     return
 
-
+# Function imports friends from Ai.py based on steamid
+# then loops through the returned dictionary to fill the listbox with names
 def find_friends(friends_list):
     global friends_dict
     global flipped_friends_dict
@@ -67,6 +88,7 @@ def find_friends(friends_list):
     return
 
 
+# hides the root window and opens the login window
 def logout_function():
     root.withdraw()
     Login()
@@ -134,20 +156,42 @@ class CreateGUI:
         #print(Ai.frequencyGamesAllFriends(self.steamid))
         self.gui()
 
-
+    # when clicking a friend in the friendslist
+    # this function determines who you clicked on and checks if their profile is private using a function in Ai.py
+    # calls either the refresh_data function or the profile_error function
     def list_select(self, event):
         selection = event.widget.curselection()
         picked = event.widget.get(selection[0])
-        ID = flipped_friends_dict[picked]['id']
+        self.ID = flipped_friends_dict[picked]['id']
+        if Ai.profile_checker(self.ID) == 1:
+           self.refresh_data()
+        else:
+            self.profile_error()
+
+    def refresh_data(self):
         self.frame1.destroy()
         self.frame2.destroy()
         self.frame3.destroy()
         self.frame4.destroy()
         self.frame5.destroy()
         self.frame6.destroy()
-        self.steamid = ID
+        self.steamid = self.ID
         self.frames(self.steamid)
 
+    def profile_error(self):
+        self.private_error = tk.Toplevel(root)
+        self.private_error.geometry(f'{overlay_window_width}x{overlay_window_height}+{int(overlay_x)}+{int(overlay_y)}')
+        self.private_error.configure(bg=background_colour, width=overlay_window_width, height=overlay_window_height)
+        self.private_error.title('error')
+        self.private_error.grab_set()
+
+        self.error_label = tk.Label(self.private_error, text="This profile is private",
+                                    font=(general_font, 30), fg=text_colour, bg=background_colour, pady=20)
+        self.error_label.pack()
+
+        self.ok_button = tk.Button(self.private_error, text='OK', font=(general_font, 20),
+                                      command=self.private_error.destroy)
+        self.ok_button.pack(expand=True)
 
     # Makes the root gui frames, top bar with title, profile button, friends list and under frame
     def gui(self):
@@ -259,23 +303,23 @@ class Login:
         self.login_screen = tk.Toplevel(root)
         self.login_screen.configure(bg=background_colour, width=screen_width, height=screen_height)
         self.login_screen.title('Login')
+        self.login_screen.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
 
-        self.welcome_label = tk.Label(self.login_screen, text="Please enter your login details", font=(general_font, 14), fg=text_colour, bg=background_colour)
-        self.welcome_label.grid(row=0, column=0, columnspan=3, sticky="wsne")
-        self.welcome_label.grid_columnconfigure(2, weight=1)
+        self.welcome_label = tk.Label(self.login_screen, text="Please enter your login details", font=(general_font, 28), fg=text_colour, bg=background_colour)
+        self.welcome_label.pack(expand=True)
 
-        self. username_label = tk.Label(self.login_screen, text="SteamID:", font=(general_font, 14), fg=text_colour, bg=background_colour)
-        self.username_label.grid(row=1, column=0, pady=10, padx=10)
+        self. username_label = tk.Label(self.login_screen, text="SteamID:", font=(general_font, 20), fg=text_colour, bg=background_colour)
+        self.username_label.pack(expand=True)
 
-        self.login_box = tk.Entry(self.login_screen)
+        self.login_box = tk.Entry(self.login_screen, font=28)
         self.login_box.insert(0, '76561198282499475')
-        self.login_box.grid(row=1, column=1, pady=10, padx=10)
+        self.login_box.pack(expand=True)
 
-        self.login_button = tk.Button(self.login_screen, text='Log me the fuck in', command=self.start_login)
-        self.login_button.grid(row=3, column=0, columnspan=2, pady=10)
+        self.login_button = tk.Button(self.login_screen, text='Login', command=self.start_login, font=28)
+        self.login_button.pack(expand=True)
 
-        self.login_label = tk.Label(self.login_screen, text='', font=(general_font, 14), fg=text_colour, bg=background_colour)
-        self.login_label.grid(row=4, column=0, columnspan=2)
+        self.login_label = tk.Label(self.login_screen, text='', font=(general_font, 28), fg=text_colour, bg=background_colour)
+        self.login_label.pack(expand=True)
 
         root.withdraw()
 
@@ -291,13 +335,21 @@ class Login:
             CreateGUI(user_id)
 
 
-'''class Details:
+class Details:
     def __init__(self):
         self.details_window = tk.Toplevel(root)
+        self.details_window.geometry(f'{overlay_window_width}x{overlay_window_height}+{int(overlay_x)}+{int(overlay_y)}')
         self.details_window.configure(bg=background_colour, width=screen_width, height=screen_height)
         self.details_window.title('Details')
-'''
+        self.details_window.grab_set()
+
+        self.details_label = tk.Label(self.details_window, text='Howdy partner')
+        self.details_label.pack()
+
+        self.return_button = tk.Button(self.details_window, text='return', command=self.details_window.destroy)
+        self.return_button.pack()
 
 
-Login()
-root.mainloop()
+if __name__ == '__main__':
+    Login()
+    root.mainloop()
