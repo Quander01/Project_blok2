@@ -2,8 +2,8 @@
 import functools
 import matplotlib
 import tkinter as tk
-from webbrowser import open
-
+from datetime import datetime
+import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -71,10 +71,6 @@ def on_leave(fig, canvas, event):
     fig.set_facecolor(figure_colour)
     canvas.draw()
 
-# button to return to your own data, only rickrolls you now
-def show_profile():
-    open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-    return
 
 # Function imports friends from Ai.py based on steamid
 # then loops through the returned dictionary to fill the listbox with names
@@ -95,6 +91,26 @@ def logout_function():
     return
 
 
+def private_checker(steamid):
+    if Ai.privateChecker(steamid):
+        return True
+    else:
+        return False
+
+
+def On_entry_up_down(event):
+    selection = event.widget.curselection()[0]
+
+    if event.keysym == 'Up':
+        selection += -1
+
+    if event.keysym == 'Down':
+        selection += 1
+
+    if 0 <= selection < event.widget.size():
+        event.widget.selection_clear(0, tk.END)
+        event.widget.select_set(selection)
+
 class CreateCharts:
     def __init__(self, title, data, axis, chart_type, frame, steamid):
         self.steamId = steamid
@@ -109,30 +125,33 @@ class CreateCharts:
     # It creates and returns a pie chart using the matplotlib library.
     def create_chart(self):
         plt.rcParams['text.color'] = text_colour
-        fig = Figure(facecolor=figure_colour, figsize=(screen_width/3.8*px, screen_height/2.7*px))
-        if self.chart_type == "progress":
-            ax = fig.add_subplot(513)
+        fig = Figure(facecolor=figure_colour, figsize=(screen_width / 3.8 * px, screen_height / 2.7 * px))
+        if self.chart_type == "infomenu":
+            content = pd.DataFrame(self.data)
+            fig.text(0.1, 0.5, str(content), fontsize=14)
+            return fig
         else:
-            ax = fig.add_subplot(111)
-        ax.set_facecolor(backboard_colour)
-        ax.set_title(self.title)
-        if self.chart_type == "pie":
-            labels = self.axis
-            values = self.data
-            plt.style.use('dark_background')
-            ax.pie(values, labels=labels, colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'])
-        elif self.chart_type == "bar":
-            x_values = self.axis
-            y_values = self.data
-            bars = ax.bar(x_values, y_values)
-            ax.bar_label(bars)
-        elif self.chart_type == "progress":
-            ax.set_xlim([0, 100])
-            ax.set_yticks([])
-            rect = plt.Rectangle((0, 0), self.data, 1, color=highlight_colour)
-            ax.add_patch(rect)
-        else:
-            raise ValueError("Invalid chart type")
+            if self.chart_type == "progress":
+                ax = fig.add_subplot(513)
+            else:
+                ax = fig.add_subplot(111)
+            ax.set_facecolor(backboard_colour)
+            ax.set_title(self.title)
+            if self.chart_type == "void":
+                plt.style.use('dark_background')
+            elif self.chart_type == "bar":
+                bars = ax.barh(self.axis, self.data)
+                ax.bar_label(bars)
+            elif self.chart_type == "progress":
+                ax.set_xlim([0, 100])
+                ax.set_yticks([])
+                rect = plt.Rectangle((0, 0), self.data, 1, color=highlight_colour)
+                ax.add_patch(rect)
+            elif self.chart_type == "pie":
+                plt.style.use('dark_background')
+                ax.pie(self.data, labels=self.axis, colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'])
+            else:
+                raise ValueError("Invalid chart type")
         return fig
 
     # Sends the title, plot data and axis titles to the pie chart creator
@@ -140,14 +159,23 @@ class CreateCharts:
     # Assigns usage of on_click and mouseover functions
     # Then draws the canvas
     def initiate_chart(self):
-        fig = self.create_chart()
-        canvas = FigureCanvasTkAgg(fig, master=self.frame)
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
-        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, self.title))
-        canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
-        canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
-        canvas.draw()
+        if self.data == -1:
+            print("nah fam, graphie gaat niet gemaakt worden")
+            self.title = 'Er zijn geen achievements gevonden voor \n je meest gespeelde spel in de afgelopen 2 weken'
+            self.chart_type = 'void'
+            fig = self.create_chart()
+            canvas = FigureCanvasTkAgg(fig, master=self.frame)
+            canvas.draw()
+            return
+        else:
+            fig = self.create_chart()
+            canvas = FigureCanvasTkAgg(fig, master=self.frame)
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+            canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
+            fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, self.title))
+            canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
+            canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
+            canvas.draw()
 
 
 class CreateGUI:
@@ -156,17 +184,22 @@ class CreateGUI:
         #print(Ai.frequencyGamesAllFriends(self.steamid))
         self.gui()
 
-    # when clicking a friend in the friendslist
+    # when clicking a friend in the friends list
     # this function determines who you clicked on and checks if their profile is private using a function in Ai.py
     # calls either the refresh_data function or the profile_error function
     def list_select(self, event):
         selection = event.widget.curselection()
         picked = event.widget.get(selection[0])
         self.ID = flipped_friends_dict[picked]['id']
-        if Ai.profile_checker(self.ID) == 1:
-           self.refresh_data()
-        else:
+        if private_checker(self.ID):
             self.profile_error()
+        else:
+            self.refresh_data()
+
+    def show_profile(self):
+        self.ID = user_id
+        self.refresh_data()
+        return
 
     def refresh_data(self):
         self.frame1.destroy()
@@ -214,8 +247,8 @@ class CreateGUI:
         profile_bar = tk.Frame(root, bg=background_colour)
         profile_bar.grid(row=0, column=0, columnspan=1, rowspan=6, sticky="news")
 
-        profile_button = tk.Button(profile_bar, text="Profile", font=(general_font, 16), fg=text_colour,
-                                   bg=figure_colour, anchor=tk.CENTER, command=show_profile, height=4)
+        profile_button = tk.Button(profile_bar, text="Back to my data", font=(general_font, 16), fg=text_colour,
+                                   bg=figure_colour, anchor=tk.CENTER, command=self.show_profile, height=4)
         profile_button.grid(sticky="news", padx=10, pady=10)
         profile_button.config(width=int(screen_width / 85.3))
 
@@ -229,6 +262,9 @@ class CreateGUI:
         friends_list.bind("<<ListboxSelect>>", self.list_select)
         friends_list.pack(side='left', fill='y', expand=True)
         find_friends(friends_list)
+        friends_list.select_set(0)
+        friends_list.bind("<Down>", On_entry_up_down)
+        friends_list.bind("<Up>", On_entry_up_down)
 
         # BOTTOM FRAME
         bottom_frame = tk.Frame(root, bg=background_colour,)
@@ -252,24 +288,36 @@ class CreateGUI:
     # Graph frames are created and data sent to the initiators
     def frames(self, steamid):
         # IMPORTS
+        achievements = []
         xaxis_2weeks = []
         yaxis_2weeks = []
         used_games = []
         recent_playtime = Ai.games2Weeks(steamid)
-        for game in recent_playtime:
-            xaxis_2weeks.append(recent_playtime[game]['name'])
-            yaxis_2weeks.append(recent_playtime[game]['playtime_2weeks'])
-            used_games.append(game)
-        achievements = Ai.allAchievements(steamid, used_games[0])
-        recent_achievements = Ai.recentGamesAchievements(steamid, used_games[0])
+        if recent_playtime:
+            for game in recent_playtime:
+                xaxis_2weeks.append(recent_playtime[game]['name'])
+                yaxis_2weeks.append(recent_playtime[game]['playtime_2weeks'])
+                used_games.append(game)
+                achievements = Ai.allAchievements(steamid, used_games[0])
+        else:
+            raise ValueError('geen data gevonden')
 
-        print(recent_achievements)
-        ach_percentage = achievements['achprocent']
+        if achievements == 0:
+            ach_percentage = -1
+            achievement_stats = Ai.recentGamesAchievements(steamid, used_games[0])
+        else:
+            achievement_stats = Ai.recentGamesAchievements(steamid, used_games[0])
+            print(achievement_stats)
+            #for time in achievement_stats:
+            #    achievement_stats[time] = (datetime.utcfromtimestamp(time).strftime('%Y-%m-%d %H:%M:%S'))
+            # print(achievement_stats)
+            ach_percentage = achievements['achprocent']
+
 
         # FRAME 1
         self.frame1 = tk.Frame(root)
         self.frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("pie chart demo 1", yaxis_2weeks, xaxis_2weeks, 'pie', self.frame1, self.steamid)
+        CreateCharts("Your recent playtime (minutes)", yaxis_2weeks, xaxis_2weeks, 'pie', self.frame1, self.steamid)
 
         # FRAME 2
         self.frame2 = tk.Frame(root)
@@ -279,7 +327,7 @@ class CreateGUI:
         # FRAME 3
         self.frame3 = tk.Frame(root)
         self.frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("bar chart demo 2", yaxis_2weeks, xaxis_2weeks, 'bar', self.frame3, self.steamid)
+        CreateCharts("achievements?", achievement_stats, '0', 'infomenu', self.frame3, self.steamid)
 
         # FRAME 4
         self.frame4 = tk.Frame(root)
@@ -292,7 +340,6 @@ class CreateGUI:
         CreateCharts("achievement % for" + xaxis_2weeks[0], yaxis_2weeks, xaxis_2weeks, 'bar', self.frame5, self.steamid)
 
         # FRAME 6
-
         self.frame6 = tk.Frame(root)
         self.frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
         CreateCharts("achievement % for " + xaxis_2weeks[0], ach_percentage, '0', 'progress', self.frame6, self.steamid)
@@ -312,7 +359,7 @@ class Login:
         self.username_label.pack(expand=True)
 
         self.login_box = tk.Entry(self.login_screen, font=28)
-        self.login_box.insert(0, '76561198282499475')
+        self.login_box.insert(0, '76561198111929702')
         self.login_box.pack(expand=True)
 
         self.login_button = tk.Button(self.login_screen, text='Login', command=self.start_login, font=28)
@@ -326,10 +373,13 @@ class Login:
     def start_login(self):
         global user_id
         user_id = self.login_box.get()
-        if len(user_id) != 17:
+        private = private_checker(user_id)
+        if private:
+            CreateGUI.profile_error(CreateGUI)
+        elif private is None:
             self.login_label.config(text="Invalid steam id")
             raise ValueError('Invalid steam id')
-        else:
+        elif not private:
             self.login_screen.destroy()
             root.deiconify()
             CreateGUI(user_id)
