@@ -160,10 +160,10 @@ def mean(lst):
 
 def privateChecker(steamId):
     """
-    Controleert of een account prive is of niet
+    Controleert of een account prive is of niet en of de vrienden- en gameslijst prive is of niet
     :param steamId: steamId van gevraagde account
     :return:
-    een boolean die aangeeft of de account prive is of niet
+    Een dictionary met booleans erin die aangeven wat wel of niet prive is of niet
     """
     try:
         request = requests.get(
@@ -174,12 +174,28 @@ def privateChecker(steamId):
     # Geeft lege lijst mee als de id invalide is
     if len(userData['response']['players']) == 0:
         return None
+    state = {}
     # Geeft 1 als het prive is
     if userData['response']['players'][0]['communityvisibilitystate'] == 1:
-        return True
+        state['friends'], state['games'] = True, True
+        return state
     # Geeft 3 als het openbaar is
     if userData['response']['players'][0]['communityvisibilitystate'] == 3:
-        return False
+        state['friends'], state['games'] = False, False
+
+    # Als het profiel publiek is, maar vriendenlijst prive
+    friendlist = requests.get(
+        f'https://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key={key}&steamid={steamId}&relationship=friend')
+    frnJson = friendlist.json()
+    if len(frnJson) == 0:
+        state['friends'] = True
+    # Als het profiel publiek is, maar gamelijst prive
+    recentlyGames = requests.get(
+        f'http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key={key}&steamid={steamId}&format=json')
+    recGa = recentlyGames.json()
+    if len(recGa['response']) == 0:
+        state['games'] = True
+    return state
 
 
 def friendlistData(steamId):
@@ -202,14 +218,11 @@ def friendlistData(steamId):
     except requests.exceptions.JSONDecodeError:
         return None
     # Er wordt gecheckt of het profiel prive is of niet. Is het wel prive, dan return 0
-    if privateChecker(steamId):
-        return 0
-    # Als het profiel wel publiek is maar de friendlist niet, return 0
-    if len(frnJson) == 0:
-        return 0
+    if privateChecker(steamId)['friends']:
+        return {}
     # De API zal een lege dictionary returnen als het profiel geen vrienden heeft
     if len(frnJson['friendslist']['friends']) == 0:
-        return 0
+        return {}
     # Aantal vrienden
     friends = 0
     for friend in frnJson['friendslist']['friends']:
@@ -240,8 +253,8 @@ def sortedFriends(steamId, key):
     dic = friendlistData(steamId)
 
     # Als de friendlistData() functie niks terug geeft dan geeft de functie 0 terug
-    if not dic:
-        return 0
+    if len(dic) == 0:
+        return {}
     # lst is de lijst met alle id's of namen
     # srtLst is de gesorteerde lijst
     lst = []
@@ -305,14 +318,11 @@ def games2Weeks(steamId):
         return None
 
     # Als het profiel prive is, dan return 0
-    if privateChecker(steamId):
-        return 0
-    # Als het profiel publiek is, maar gameslijst prive is, return 0
-    if len(recGa['response']) == 0:
-        return 0
+    if privateChecker(steamId)['games']:
+        return {}
     # Als het profiel geen games heeft afgelopen twee weken, dan return 0
     if recGa['response']['total_count'] == 0:
-        return 0
+        return {}
     games2weeks = {}
     i = 0
     for game in recGa['response']['games']:
@@ -342,14 +352,14 @@ def ownedGames(steamId):
     except requests.exceptions.JSONDecodeError:
         return None
     # Als het profiel prive is, dan return 0
-    if privateChecker(steamId):
-        return 0
+    if privateChecker(steamId)['games']:
+        return {}
     # Als het profiel publiek is, maar gameslijst wel prive
-    if len(oGa['response']) == 0:
-        return 0
+    elif len(oGa['response']) == 0:
+        return {}
     # Als het profiel geen spellen heeft dan is de gamecount 0 dus return 0
     if oGa['response']['game_count'] == 0:
-        return 0
+        return {}
     oGaDic = {}
     for game in oGa['response']['games']:
         oGaDic[game['appid']] = {'name': game['name'], 'playtime': game['playtime_forever']}
@@ -374,11 +384,11 @@ def allAchievements(steamId, appId):
     except requests.exceptions.JSONDecodeError:
         return None
     # Als het profiel prive is, dan return 0
-    if privateChecker(steamId):
-        return 0
+    if privateChecker(steamId)['games']:
+        return {}
     # Als het profiel het spel niet heeft, dan return 0
     if not plyAch['playerstats']['success']:
-        return 0
+        return {}
     tot = 0
     achieved = 0
     # Dictionary van de achievements met naam als key en behaalde status en behaalde tijdstip als value
@@ -405,8 +415,8 @@ def recentGamesAchievements(steamId, appId):
     achDic = allAchievements(steamId, appId)
 
     # Checkt of de lijst leeg is of niet
-    if not achDic:
-        return 0
+    if len(achDic) == 0:
+        return {}
 
     # Zorgt ervoor de dat unlocktime de key wordt en de naam de "unlocktime" wordt
     ciDhca = {}
@@ -436,14 +446,14 @@ def frequencyGamesAllFriends(steamId):
     friendsDic = friendlistData(steamId)
 
     # Als het profiel leeg is dan geeft het 0 terug
-    if not friendsDic:
-        return 0
+    if len(friendsDic) == 0:
+        return {}
 
     # List met alle namen van alle games die de vrienden heeft van de gebruiker
     lstAllName = []
     for id in friendsDic.keys():
         ownGamDic = ownedGames(id)
-        if ownGamDic != 0:
+        if len(ownGamDic) != 0:
             for name in ownGamDic.values():
                 lstAllName.append(name['name'])
 
@@ -492,14 +502,11 @@ def averageGames2Weeks(steamId):
         return None
 
     # Als het profiel leeg is dan de return van de api {'response': {}}, dus return 0
-    if privateChecker(steamId):
-        average = 0
-    # Als het profiel wel publiek is, maar gameslijst prive is
-    elif len(recGa['response']) == 0:
-        average = 0
+    if privateChecker(steamId)['games']:
+        return {}
     # Als het profiel afgelopen twee weken niet gespeeld heeft
     elif recGa['response']['total_count'] == 0:
-        average = 0
+        return {}
     else:
         speeltijdenLst = []
         for game in recGa['response']['games']:
