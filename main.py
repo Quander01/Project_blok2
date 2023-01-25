@@ -86,7 +86,8 @@ def find_friends(friends_list):
 
 # hides the root window and opens the login window
 def logout_function():
-    root.withdraw()
+    for widget in root.winfo_children():
+        widget.destroy()
     Login()
     return
 
@@ -111,6 +112,7 @@ def On_entry_up_down(event):
         event.widget.selection_clear(0, tk.END)
         event.widget.select_set(selection)
 
+
 class CreateCharts:
     def __init__(self, title, data, axis, chart_type, frame, steamid):
         self.steamId = steamid
@@ -127,8 +129,18 @@ class CreateCharts:
         plt.rcParams['text.color'] = text_colour
         fig = Figure(facecolor=figure_colour, figsize=(screen_width / 3.8 * px, screen_height / 2.7 * px))
         if self.chart_type == "infomenu":
-            content = pd.DataFrame(self.data)
-            fig.text(0.1, 0.5, str(content), fontsize=14)
+            new_data = {'time': [], 'name': []}
+            for content in self.data.values():
+                for data in content:
+                    if type(data) == int:
+                        new_data['time'].append(datetime.utcfromtimestamp(data).strftime('%Y-%m-%d'))
+                    else:
+                        new_data['name'].append(data)
+            content = pd.DataFrame(new_data, columns=None)
+            fig.text(0.5, 0.8, 'Recent achievements', fontsize=30, horizontalalignment='center')
+            fig.text(0.5, 0.7, self.title, fontsize=20, horizontalalignment='center')
+            fig.text(0.5, 0.4, content.to_string(index=False, header=False), fontsize=12, horizontalalignment='center')
+
             return fig
         else:
             if self.chart_type == "progress":
@@ -327,7 +339,7 @@ class CreateGUI:
         # FRAME 3
         self.frame3 = tk.Frame(root)
         self.frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("achievements?", achievement_stats, '0', 'infomenu', self.frame3, self.steamid)
+        CreateCharts(f"from {xaxis_2weeks[0]}", achievement_stats, '0', 'infomenu', self.frame3, self.steamid)
 
         # FRAME 4
         self.frame4 = tk.Frame(root)
