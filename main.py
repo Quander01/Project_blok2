@@ -79,8 +79,9 @@ def find_friends(friends_list):
     global flipped_friends_dict
     friends_dict = Ai.friendlistData(user_id)
     flipped_friends_dict = Ai.flipIDData(friends_dict)
-    for i in friends_dict:
-        friends_list.insert(tk.END, friends_dict[i]['name'])
+    sorted_friends = Ai.sortedFriends(user_id, 0)
+    for i in sorted_friends:
+        friends_list.insert(tk.END, i)
     return
 
 
@@ -93,10 +94,8 @@ def logout_function():
 
 
 def private_checker(steamid):
-    if Ai.privateChecker(steamid):
-        return True
-    else:
-        return False
+    return Ai.privateChecker(steamid)
+
 
 
 def On_entry_up_down(event):
@@ -142,16 +141,22 @@ class CreateCharts:
             fig.text(0.5, 0.4, content.to_string(index=False, header=False), fontsize=12, horizontalalignment='center')
 
             return fig
+        elif self.chart_type == "void":
+            plt.style.use('dark_background')
+            if self.data == -1:
+                fig.text(0.5, 0.8, 'Recent playtime (minutes)', fontsize=20, horizontalalignment='center')
+            elif self.data == -2:
+                fig.text(0.5, 0.8, 'Recent achievements', fontsize=30, horizontalalignment='center')
+            fig.text(0.5, 0.5, self.title, fontsize=14, horizontalalignment='center')
         else:
             if self.chart_type == "progress":
                 ax = fig.add_subplot(513)
+                self.title = f"Achievement % for {self.title}"
             else:
                 ax = fig.add_subplot(111)
             ax.set_facecolor(backboard_colour)
-            ax.set_title(self.title)
-            if self.chart_type == "void":
-                plt.style.use('dark_background')
-            elif self.chart_type == "bar":
+            ax.set_title(self.title, fontsize=20)
+            if self.chart_type == "bar":
                 bars = ax.barh(self.axis, self.data)
                 ax.bar_label(bars)
             elif self.chart_type == "progress":
@@ -171,12 +176,22 @@ class CreateCharts:
     # Assigns usage of on_click and mouseover functions
     # Then draws the canvas
     def initiate_chart(self):
+        if not self.steamId == user_id:
+            self.friendname = friends_dict[f'{self.steamId}']['name']
         if self.data == -1:
-            print("nah fam, graphie gaat niet gemaakt worden")
-            self.title = 'Er zijn geen achievements gevonden voor \n je meest gespeelde spel in de afgelopen 2 weken'
+            self.title = f'{self.friendname} has touched grass'
             self.chart_type = 'void'
             fig = self.create_chart()
             canvas = FigureCanvasTkAgg(fig, master=self.frame)
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+            canvas.draw()
+            return
+        elif self.data == -2:
+            self.title = f'{self.friendname} has not gotten any achievements\nin the past 2 weeks for {self.title}'
+            self.chart_type = 'void'
+            fig = self.create_chart()
+            canvas = FigureCanvasTkAgg(fig, master=self.frame)
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
             canvas.draw()
             return
         else:
@@ -203,7 +218,8 @@ class CreateGUI:
         selection = event.widget.curselection()
         picked = event.widget.get(selection[0])
         self.ID = flipped_friends_dict[picked]['id']
-        if private_checker(self.ID):
+        private = private_checker(self.ID)
+        if private['games']:
             self.profile_error()
         else:
             self.refresh_data()
@@ -214,6 +230,7 @@ class CreateGUI:
         return
 
     def refresh_data(self):
+
         self.frame1.destroy()
         self.frame2.destroy()
         self.frame3.destroy()
@@ -221,11 +238,11 @@ class CreateGUI:
         self.frame5.destroy()
         self.frame6.destroy()
         self.steamid = self.ID
-        self.frames(self.steamid)
+        self.data(self.steamid)
 
     def profile_error(self):
         self.private_error = tk.Toplevel(root)
-        self.private_error.geometry(f'{overlay_window_width}x{overlay_window_height}+{int(overlay_x)}+{int(overlay_y)}')
+        self.private_error.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
         self.private_error.configure(bg=background_colour, width=overlay_window_width, height=overlay_window_height)
         self.private_error.title('error')
         self.private_error.grab_set()
@@ -235,7 +252,7 @@ class CreateGUI:
         self.error_label.pack()
 
         self.ok_button = tk.Button(self.private_error, text='OK', font=(general_font, 20),
-                                      command=self.private_error.destroy)
+                                    command=self.private_error.destroy)
         self.ok_button.pack(expand=True)
 
     # Makes the root gui frames, top bar with title, profile button, friends list and under frame
@@ -295,66 +312,70 @@ class CreateGUI:
         logout_button.grid(sticky="news", padx=10, pady=10)
         logout_button.config(width=int(screen_width / 85.3))
 
-        self.frames(user_id)
+        self.data(user_id)
+        self.frames()
+
+
+    def data(self, steamid):
+        # Declare recent playtime
+        self.xaxis_2weeks = []
+        self.yaxis_2weeks = []
+        self.used_games = []
+        self.recent_playtime = Ai.games2Weeks(steamid)
+        if not self.recent_playtime:
+            self.xaxis_2weeks = -1
+            self.yaxis_2weeks = -1
+            self.gamename = 'nope'
+        else:
+            for game in self.recent_playtime:
+                self.xaxis_2weeks.append(self.recent_playtime[game]['name'])
+                self.yaxis_2weeks.append(self.recent_playtime[game]['playtime_2weeks'])
+                self.used_games.append(game)
+                self.gamename = self.xaxis_2weeks[0]
+                self.mostplayed = self.used_games[0]
+
+        # Declare achievement stats
+        self.achievements = {}
+        self.achievements = Ai.allAchievements(steamid, self.mostplayed)
+        if not self.achievements:
+            self.ach_percentage = -2
+            self.achievement_stats = -2
+        else:
+            self.achievement_stats = Ai.recentGamesAchievements(steamid, self.mostplayed)
+            self.ach_percentage = self.achievements['achprocent']
+
 
     # Graph frames are created and data sent to the initiators
-    def frames(self, steamid):
-        # IMPORTS
-        achievements = []
-        xaxis_2weeks = []
-        yaxis_2weeks = []
-        used_games = []
-        recent_playtime = Ai.games2Weeks(steamid)
-        if recent_playtime:
-            for game in recent_playtime:
-                xaxis_2weeks.append(recent_playtime[game]['name'])
-                yaxis_2weeks.append(recent_playtime[game]['playtime_2weeks'])
-                used_games.append(game)
-                achievements = Ai.allAchievements(steamid, used_games[0])
-        else:
-            raise ValueError('geen data gevonden')
-
-        if achievements == 0:
-            ach_percentage = -1
-            achievement_stats = Ai.recentGamesAchievements(steamid, used_games[0])
-        else:
-            achievement_stats = Ai.recentGamesAchievements(steamid, used_games[0])
-            print(achievement_stats)
-            #for time in achievement_stats:
-            #    achievement_stats[time] = (datetime.utcfromtimestamp(time).strftime('%Y-%m-%d %H:%M:%S'))
-            # print(achievement_stats)
-            ach_percentage = achievements['achprocent']
-
-
+    def frames(self):
         # FRAME 1
         self.frame1 = tk.Frame(root)
         self.frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("Your recent playtime (minutes)", yaxis_2weeks, xaxis_2weeks, 'pie', self.frame1, self.steamid)
+        CreateCharts("Recent playtime (minutes)", self.yaxis_2weeks, self.xaxis_2weeks, 'pie', self.frame1, self.steamid)
 
         # FRAME 2
         self.frame2 = tk.Frame(root)
         self.frame2.grid(row=2, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("Your recent playtime (minutes)", yaxis_2weeks, xaxis_2weeks, 'bar', self.frame2, self.steamid)
+        CreateCharts("Recent playtime (minutes)", self.yaxis_2weeks, self.xaxis_2weeks, 'bar', self.frame2, self.steamid)
 
         # FRAME 3
         self.frame3 = tk.Frame(root)
         self.frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts(f"from {xaxis_2weeks[0]}", achievement_stats, '0', 'infomenu', self.frame3, self.steamid)
+        CreateCharts(f"in {self.gamename}", self.achievement_stats, '0', 'infomenu', self.frame3, self.steamid)
 
         # FRAME 4
         self.frame4 = tk.Frame(root)
         self.frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("pie chart demo 2", yaxis_2weeks, xaxis_2weeks, 'pie', self.frame4, self.steamid)
+        CreateCharts("pie chart demo 2", self.yaxis_2weeks, self.xaxis_2weeks, 'pie', self.frame4, self.steamid)
 
         # FRAME 5
         self.frame5 = tk.Frame(root)
         self.frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("achievement % for" + xaxis_2weeks[0], yaxis_2weeks, xaxis_2weeks, 'bar', self.frame5, self.steamid)
+        CreateCharts(self.gamename, self.yaxis_2weeks, self.xaxis_2weeks, 'bar', self.frame5, self.steamid)
 
         # FRAME 6
         self.frame6 = tk.Frame(root)
         self.frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("achievement % for " + xaxis_2weeks[0], ach_percentage, '0', 'progress', self.frame6, self.steamid)
+        CreateCharts(self.gamename, self.ach_percentage, '0', 'progress', self.frame6, self.steamid)
 
 
 class Login:
@@ -386,12 +407,12 @@ class Login:
         global user_id
         user_id = self.login_box.get()
         private = private_checker(user_id)
-        if private:
-            CreateGUI.profile_error(CreateGUI)
-        elif private is None:
+        if private is None:
             self.login_label.config(text="Invalid steam id")
             raise ValueError('Invalid steam id')
-        elif not private:
+        elif private['friends'] or private['games']:
+            CreateGUI.profile_error(CreateGUI)
+        else:
             self.login_screen.destroy()
             root.deiconify()
             CreateGUI(user_id)
@@ -404,9 +425,10 @@ class Details:
         self.details_window.configure(bg=background_colour, width=screen_width, height=screen_height)
         self.details_window.title('Details')
         self.details_window.grab_set()
-
-        self.details_label = tk.Label(self.details_window, text='Howdy partner')
-        self.details_label.pack()
+        self.details_frame = tk.Frame(self.details_window)
+        self.details_frame.pack(anchor='center', )
+        CreateCharts("Recent playtime (minutes)", -1, -1, 'pie', self.details_frame,
+                     76561198282499475)
 
         self.return_button = tk.Button(self.details_window, text='return', command=self.details_window.destroy)
         self.return_button.pack()
