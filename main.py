@@ -213,6 +213,8 @@ class CreateGUI:
         else:
             print("Here we are")
             self.refresh_data()
+
+
     def on_list_click(self, event):
         self.selection = event.widget.curselection()[0]
         self.list_select(event)
@@ -245,6 +247,8 @@ class CreateGUI:
         self.steamid = self.ID
         self.data(self.steamid)
         self.frames()
+        root.after(50, self.friends_list.focus_set())
+
 
     def profile_error(self):
         self.private_error = tk.Toplevel(root)
@@ -321,8 +325,7 @@ class CreateGUI:
 
         self.data(user_id)
         self.frames()
-
-
+        root.after(50, self.friends_list.focus_set())
     def data(self, steamid):
         # Declare recent playtime
         self.xaxis_2weeks = []
@@ -332,7 +335,7 @@ class CreateGUI:
         if not self.recent_playtime:
             self.xaxis_2weeks = -1
             self.yaxis_2weeks = -1
-            self.gamename = 'nope'
+            self.gamename = ''
         else:
             for game in self.recent_playtime:
                 self.xaxis_2weeks.append(self.recent_playtime[game]['name'])
@@ -350,7 +353,7 @@ class CreateGUI:
         else:
             self.achievement_stats = Ai.recentGamesAchievements(steamid, self.mostplayed)
             self.ach_percentage = self.achievements['achprocent']
-
+        root.after(50, self.friends_list.focus_set())
 
     # Graph frames are created and data sent to the initiators
     def frames(self):
@@ -367,7 +370,7 @@ class CreateGUI:
         # FRAME 3
         self.frame3 = tk.Frame(root)
         self.frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts(f"in {self.gamename}", self.achievement_stats, '0', 'infomenu', self.frame3, self.steamid)
+        CreateCharts(f"{self.gamename}", self.achievement_stats, '0', 'infomenu', self.frame3, self.steamid)
 
         # FRAME 4
         self.frame4 = tk.Frame(root)
@@ -383,7 +386,7 @@ class CreateGUI:
         self.frame6 = tk.Frame(root)
         self.frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
         CreateCharts(self.gamename, self.ach_percentage, '0', 'progress', self.frame6, self.steamid)
-
+        root.after(50, self.friends_list.focus_set())
 
 class Login:
     def __init__(self):
