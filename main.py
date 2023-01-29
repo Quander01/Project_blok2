@@ -97,21 +97,6 @@ def private_checker(steamid):
     return Ai.privateChecker(steamid)
 
 
-
-def On_entry_up_down(event):
-    selection = event.widget.curselection()[0]
-
-    if event.keysym == 'Up':
-        selection += -1
-
-    if event.keysym == 'Down':
-        selection += 1
-
-    if 0 <= selection < event.widget.size():
-        event.widget.selection_clear(0, tk.END)
-        event.widget.select_set(selection)
-
-
 class CreateCharts:
     def __init__(self, title, data, axis, chart_type, frame, steamid):
         self.steamId = steamid
@@ -208,21 +193,42 @@ class CreateCharts:
 class CreateGUI:
     def __init__(self, steamid):
         self.steamid = steamid
+        self.index = 10
         #print(Ai.frequencyGamesAllFriends(self.steamid))
         self.gui()
+
+
 
     # when clicking a friend in the friends list
     # this function determines who you clicked on and checks if their profile is private using a function in Ai.py
     # calls either the refresh_data function or the profile_error function
     def list_select(self, event):
-        selection = event.widget.curselection()
-        picked = event.widget.get(selection[0])
-        self.ID = flipped_friends_dict[picked]['id']
+        print(self.selection)
+
+        self.picked = event.widget.get(self.selection)
+        self.ID = flipped_friends_dict[self.picked]['id']
         private = private_checker(self.ID)
         if private['games']:
             self.profile_error()
         else:
+            print("Here we are")
             self.refresh_data()
+    def on_list_click(self, event):
+        self.selection = event.widget.curselection()[0]
+        self.list_select(event)
+
+    def keypress_down(self, event):
+        self.friends_list.select_clear(self.selection)
+        self.selection += 1
+        self.friends_list.select_set(self.selection)
+        self.list_select(event)
+        print("Key down")
+
+    def keypress_up(self, event):
+        self.friends_list.select_clear(self.selection)
+        self.selection -= 1
+        self.friends_list.select_set(self.selection)
+        self.list_select(event)
 
     def show_profile(self):
         self.ID = user_id
@@ -230,7 +236,6 @@ class CreateGUI:
         return
 
     def refresh_data(self):
-
         self.frame1.destroy()
         self.frame2.destroy()
         self.frame3.destroy()
@@ -239,6 +244,7 @@ class CreateGUI:
         self.frame6.destroy()
         self.steamid = self.ID
         self.data(self.steamid)
+        self.frames()
 
     def profile_error(self):
         self.private_error = tk.Toplevel(root)
@@ -282,18 +288,19 @@ class CreateGUI:
         profile_button.config(width=int(screen_width / 85.3))
 
         # FRIENDS LIST
-        listbox_frame = tk.Frame(root, bg=background_colour)
-        listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news')
+        self.listbox_frame = tk.Frame(root, bg=background_colour)
+        self.listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news')
 
-        friends_list = tk.Listbox(listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single',\
+        self.friends_list = tk.Listbox(self.listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single',\
                                   font=(general_font, 17), selectbackground=highlight_colour)
-        friends_list.config(highlightthickness=0)
-        friends_list.bind("<<ListboxSelect>>", self.list_select)
-        friends_list.pack(side='left', fill='y', expand=True)
-        find_friends(friends_list)
-        friends_list.select_set(0)
-        friends_list.bind("<Down>", On_entry_up_down)
-        friends_list.bind("<Up>", On_entry_up_down)
+        self.friends_list.config(highlightthickness=0)
+        self.friends_list.bind("<<ListboxSelect>>", self.on_list_click)
+        self.friends_list.pack(side='left', fill='y', expand=True)
+        find_friends(self.friends_list)
+        self.selection = 0
+        self.friends_list.select_set(self.selection)
+        self.friends_list.bind("<Down>", self.keypress_down)
+        self.friends_list.bind("<Up>", self.keypress_up)
 
         # BOTTOM FRAME
         bottom_frame = tk.Frame(root, bg=background_colour,)
@@ -418,6 +425,10 @@ class Login:
             CreateGUI(user_id)
 
 
+def set_focus(instance):
+    instance.friends_list.focus()
+
+
 class Details:
     def __init__(self):
         self.details_window = tk.Toplevel(root)
@@ -437,3 +448,5 @@ class Details:
 if __name__ == '__main__':
     Login()
     root.mainloop()
+
+
