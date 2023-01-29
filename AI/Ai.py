@@ -1,5 +1,5 @@
 import requests
-
+import time
 key = '882B75E94431CD842CCD402F7E9C1A73'
 steamId = '76561198111929702'
 appId = '367520'

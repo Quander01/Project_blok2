@@ -1,15 +1,15 @@
 # import all bullshit
 import functools
 import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.use('TkAgg')
 import tkinter as tk
 from datetime import datetime
 import pandas as pd
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from AI import Ai
-matplotlib.use("TkAgg")
-
+import time
 
 # declares all globals for styling
 if __name__ == '__main__':
@@ -197,23 +197,18 @@ class CreateGUI:
         #print(Ai.frequencyGamesAllFriends(self.steamid))
         self.gui()
 
-
-
     # when clicking a friend in the friends list
     # this function determines who you clicked on and checks if their profile is private using a function in Ai.py
     # calls either the refresh_data function or the profile_error function
     def list_select(self, event):
         print(self.selection)
-
         self.picked = event.widget.get(self.selection)
         self.ID = flipped_friends_dict[self.picked]['id']
         private = private_checker(self.ID)
         if private['games']:
             self.profile_error()
         else:
-            print("Here we are")
             self.refresh_data()
-
 
     def on_list_click(self, event):
         self.selection = event.widget.curselection()[0]
@@ -224,13 +219,14 @@ class CreateGUI:
         self.selection += 1
         self.friends_list.select_set(self.selection)
         self.list_select(event)
-        print("Key down")
+        root.after(50, self.friends_list.focus_force())
 
     def keypress_up(self, event):
         self.friends_list.select_clear(self.selection)
         self.selection -= 1
         self.friends_list.select_set(self.selection)
         self.list_select(event)
+        root.after(50, self.friends_list.focus_force())
 
     def show_profile(self):
         self.ID = user_id
@@ -247,8 +243,6 @@ class CreateGUI:
         self.steamid = self.ID
         self.data(self.steamid)
         self.frames()
-        root.after(50, self.friends_list.focus_set())
-
 
     def profile_error(self):
         self.private_error = tk.Toplevel(root)
@@ -299,12 +293,13 @@ class CreateGUI:
                                   font=(general_font, 17), selectbackground=highlight_colour)
         self.friends_list.config(highlightthickness=0)
         self.friends_list.bind("<<ListboxSelect>>", self.on_list_click)
+        self.friends_list.bind("<KeyRelease-Down>", self.keypress_down)
+        self.friends_list.bind("<KeyRelease-Up>", self.keypress_up)
         self.friends_list.pack(side='left', fill='y', expand=True)
         find_friends(self.friends_list)
         self.selection = 0
         self.friends_list.select_set(self.selection)
-        self.friends_list.bind("<Down>", self.keypress_down)
-        self.friends_list.bind("<Up>", self.keypress_up)
+
 
         # BOTTOM FRAME
         bottom_frame = tk.Frame(root, bg=background_colour,)
@@ -326,12 +321,14 @@ class CreateGUI:
         self.data(user_id)
         self.frames()
         root.after(50, self.friends_list.focus_set())
+
     def data(self, steamid):
         # Declare recent playtime
         self.xaxis_2weeks = []
         self.yaxis_2weeks = []
         self.used_games = []
         self.recent_playtime = Ai.games2Weeks(steamid)
+
         if not self.recent_playtime:
             self.xaxis_2weeks = -1
             self.yaxis_2weeks = -1
@@ -343,7 +340,6 @@ class CreateGUI:
                 self.used_games.append(game)
                 self.gamename = self.xaxis_2weeks[0]
                 self.mostplayed = self.used_games[0]
-
         # Declare achievement stats
         self.achievements = {}
         self.achievements = Ai.allAchievements(steamid, self.mostplayed)
@@ -353,7 +349,7 @@ class CreateGUI:
         else:
             self.achievement_stats = Ai.recentGamesAchievements(steamid, self.mostplayed)
             self.ach_percentage = self.achievements['achprocent']
-        root.after(50, self.friends_list.focus_set())
+
 
     # Graph frames are created and data sent to the initiators
     def frames(self):
@@ -386,7 +382,7 @@ class CreateGUI:
         self.frame6 = tk.Frame(root)
         self.frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
         CreateCharts(self.gamename, self.ach_percentage, '0', 'progress', self.frame6, self.steamid)
-        root.after(50, self.friends_list.focus_set())
+
 
 class Login:
     def __init__(self):
@@ -426,10 +422,6 @@ class Login:
             self.login_screen.destroy()
             root.deiconify()
             CreateGUI(user_id)
-
-
-def set_focus(instance):
-    instance.friends_list.focus()
 
 
 class Details:
