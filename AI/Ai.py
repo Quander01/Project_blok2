@@ -217,9 +217,6 @@ def friendlistData(steamId):
     # Als de ingevulde steamId niet klopt dan geeft het een 0 terug
     except requests.exceptions.JSONDecodeError:
         return None
-    # Er wordt gecheckt of het profiel prive is of niet. Is het wel prive, dan return 0
-    if privateChecker(steamId)['friends']:
-        return {}
     # De API zal een lege dictionary returnen als het profiel geen vrienden heeft
     if len(frnJson['friendslist']['friends']) == 0:
         return {}
@@ -317,9 +314,6 @@ def games2Weeks(steamId):
     except requests.exceptions.JSONDecodeError:
         return None
 
-    # Als het profiel prive is, dan return 0
-    if privateChecker(steamId)['games']:
-        return {}
     # Als het profiel geen games heeft afgelopen twee weken, dan return 0
     if recGa['response']['total_count'] == 0:
         return {}
@@ -351,11 +345,8 @@ def ownedGames(steamId):
         oGa = ownedGames.json()
     except requests.exceptions.JSONDecodeError:
         return None
-    # Als het profiel prive is, dan return 0
-    if privateChecker(steamId)['games']:
-        return {}
     # Als het profiel publiek is, maar gameslijst wel prive
-    elif len(oGa['response']) == 0:
+    if len(oGa['response']) == 0:
         return {}
     # Als het profiel geen spellen heeft dan is de gamecount 0 dus return 0
     if oGa['response']['game_count'] == 0:
@@ -383,9 +374,6 @@ def allAchievements(steamId, appId):
         plyAch = playerAchievements.json()
     except requests.exceptions.JSONDecodeError:
         return None
-    # Als het profiel prive is, dan return 0
-    if privateChecker(steamId)['games']:
-        return {}
     # Als het profiel het spel niet heeft, dan return 0
     if not plyAch['playerstats']['success']:
         return {}
@@ -501,16 +489,11 @@ def averageGames2Weeks(steamId):
     except requests.exceptions.JSONDecodeError:
         return None
 
-    # Als het profiel leeg is dan de return van de api {'response': {}}, dus return 0
-    if privateChecker(steamId)['games']:
-        return {}
     # Als het profiel afgelopen twee weken niet gespeeld heeft
-    elif recGa['response']['total_count'] == 0:
+    if recGa['response']['total_count'] == 0:
         return {}
-    else:
-        speeltijdenLst = []
-        for game in recGa['response']['games']:
-            speeltijdenLst.append(game['playtime_2weeks'])
-
-        average = mean(speeltijdenLst)
+    speeltijdenLst = []
+    for game in recGa['response']['games']:
+        speeltijdenLst.append(game['playtime_2weeks'])
+    average = mean(speeltijdenLst)
     return average
