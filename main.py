@@ -9,6 +9,15 @@ import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from AI import Ai
+from TI import ti
+import keyboard
+from serial.tools import list_ports
+import serial
+import subprocess
+
+
+
+import time
 import time
 
 # declares all globals for styling
@@ -191,6 +200,7 @@ class CreateCharts:
 
 
 class CreateGUI:
+
     def __init__(self, steamid):
         self.steamid = steamid
         self.index = 10
@@ -244,6 +254,16 @@ class CreateGUI:
         self.data(self.steamid)
         self.frames()
 
+    def start_ti(self):
+        input = ti.start().strip()
+        print(input)
+        if input == str(0):
+            keyboard.press_and_release('Up')
+            print('i tried to press up')
+        elif input == str(1):
+            keyboard.press_and_release('Down')
+            print('i tried to press down')
+
     def profile_error(self):
         self.private_error = tk.Toplevel(root)
         self.private_error.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
@@ -295,6 +315,7 @@ class CreateGUI:
         self.friends_list.bind("<<ListboxSelect>>", self.on_list_click)
         self.friends_list.bind("<KeyRelease-Down>", self.keypress_down)
         self.friends_list.bind("<KeyRelease-Up>", self.keypress_up)
+
         self.friends_list.pack(side='left', fill='y', expand=True)
         find_friends(self.friends_list)
         self.selection = 0
@@ -314,13 +335,16 @@ class CreateGUI:
         logout_bar.grid(row=4, column=0, columnspan=1, rowspan=6, sticky="news")
 
         logout_button = tk.Button(logout_bar, text="Logout", font=(general_font, 16), fg=text_colour, bg=figure_colour,
-                                  anchor=tk.CENTER, command=logout_function, height=1)
+                                  anchor=tk.CENTER, command=self.start_ti, height=1)
+        # EDIT BACK LATER TO LOGOUT
         logout_button.grid(sticky="news", padx=10, pady=10)
         logout_button.config(width=int(screen_width / 85.3))
 
         self.data(user_id)
         self.frames()
         root.after(50, self.friends_list.focus_set())
+
+
 
     def data(self, steamid):
         # Declare recent playtime
@@ -438,6 +462,7 @@ class Details:
 
         self.return_button = tk.Button(self.details_window, text='return', command=self.details_window.destroy)
         self.return_button.pack()
+
 
 
 if __name__ == '__main__':
