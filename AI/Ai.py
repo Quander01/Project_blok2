@@ -1,9 +1,5 @@
 import requests
-
 key = '882B75E94431CD842CCD402F7E9C1A73'
-steamId = '76561198111929702'
-appId = '367520'
-
 
 # Algemene statistiek functies______________________________________
 def mergeSort(lst):
