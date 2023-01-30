@@ -5,20 +5,14 @@ import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 import tkinter as tk
 from datetime import datetime
+from time import strftime
 import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from AI import Ai
 from TI import ti
 import keyboard
-from serial.tools import list_ports
-import serial
-import subprocess
 
-
-
-import time
-import time
 
 # declares all globals for styling
 if __name__ == '__main__':
@@ -64,9 +58,9 @@ if __name__ == '__main__':
 
 # Function to open the info windows when clicking on charts
 # takes the title of the selected graph
-def on_click(fig, title, event):
+def on_click(fig, title, frame, event):
     print("you clicked on", title)
-    Details()
+    Details(frame, title)
 
 
 # Register when the cursor enters the chart area and change the colour
@@ -121,6 +115,7 @@ class CreateCharts:
     def create_chart(self):
         plt.rcParams['text.color'] = text_colour
         fig = Figure(facecolor=figure_colour, figsize=(screen_width / 3.8 * px, screen_height / 2.7 * px))
+        plt.style.use('dark_background')
         if self.chart_type == "infomenu":
             new_data = {'time': [], 'name': []}
             for content in self.data.values():
@@ -133,7 +128,16 @@ class CreateCharts:
             fig.text(0.5, 0.8, 'Recent achievements', fontsize=30, horizontalalignment='center')
             fig.text(0.5, 0.7, self.title, fontsize=20, horizontalalignment='center')
             fig.text(0.5, 0.4, content.to_string(index=False, header=False), fontsize=12, horizontalalignment='center')
-
+            return fig
+        elif self.chart_type == "welcome":
+            fig.text(0.5, 0.7, self.title, fontsize=20, horizontalalignment='center')
+            fig.text(0.5, 0.4, 'hi there', fontsize=12, horizontalalignment='center')
+            return fig
+        elif self.chart_type == 'clock':
+            string = strftime('%d/%m/%Y')
+            fig.text(0.5, 0.7, self.title, fontsize=30, horizontalalignment='center')
+            fig.text(0.5, 0.5, "today's date:", fontsize=20, horizontalalignment='center')
+            fig.text(0.5, 0.4, string, fontsize=20, horizontalalignment='center')
             return fig
         elif self.chart_type == "void":
             plt.style.use('dark_background')
@@ -142,6 +146,7 @@ class CreateCharts:
             elif self.data == -2:
                 fig.text(0.5, 0.8, 'Recent achievements', fontsize=30, horizontalalignment='center')
             fig.text(0.5, 0.5, self.title, fontsize=14, horizontalalignment='center')
+            return fig
         else:
             if self.chart_type == "progress":
                 ax = fig.add_subplot(513)
@@ -159,7 +164,6 @@ class CreateCharts:
                 rect = plt.Rectangle((0, 0), self.data, 1, color=highlight_colour)
                 ax.add_patch(rect)
             elif self.chart_type == "pie":
-                plt.style.use('dark_background')
                 ax.pie(self.data, labels=self.axis, colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'])
             else:
                 raise ValueError("Invalid chart type")
@@ -175,28 +179,19 @@ class CreateCharts:
         if self.data == -1:
             self.title = f'{self.friendname} has touched grass'
             self.chart_type = 'void'
-            fig = self.create_chart()
-            canvas = FigureCanvasTkAgg(fig, master=self.frame)
-            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-            canvas.draw()
-            return
         elif self.data == -2:
             self.title = f'{self.friendname} has not gotten any achievements\nin the past 2 weeks for {self.title}'
             self.chart_type = 'void'
-            fig = self.create_chart()
-            canvas = FigureCanvasTkAgg(fig, master=self.frame)
-            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-            canvas.draw()
-            return
-        else:
-            fig = self.create_chart()
-            canvas = FigureCanvasTkAgg(fig, master=self.frame)
-            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-            canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
-            fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, self.title))
-            canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
-            canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
-            canvas.draw()
+        elif self.data == -3:
+            self.title = f'Welcome'
+        fig = self.create_chart()
+        canvas = FigureCanvasTkAgg(fig, master=self.frame)
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        canvas.get_tk_widget().bind("<Configure>", lambda event: canvas.draw())
+        fig.canvas.mpl_connect('button_press_event', functools.partial(on_click, fig, self.title, self.frame))
+        canvas.get_tk_widget().bind("<Enter>", functools.partial(on_enter, fig, canvas))
+        canvas.get_tk_widget().bind("<Leave>", functools.partial(on_leave, fig, canvas))
+        canvas.draw()
 
 
 class CreateGUI:
@@ -204,7 +199,6 @@ class CreateGUI:
     def __init__(self, steamid):
         self.steamid = steamid
         self.index = 10
-        #print(Ai.frequencyGamesAllFriends(self.steamid))
         self.gui()
 
     # when clicking a friend in the friends list
@@ -244,7 +238,6 @@ class CreateGUI:
         return
 
     def refresh_data(self):
-        self.frame1.destroy()
         self.frame2.destroy()
         self.frame3.destroy()
         self.frame4.destroy()
@@ -305,6 +298,11 @@ class CreateGUI:
         profile_button.grid(sticky="news", padx=10, pady=10)
         profile_button.config(width=int(screen_width / 85.3))
 
+        profile_button = tk.Button(profile_bar, text="Sensor on", font=(general_font, 16), fg=text_colour,
+                                   bg=figure_colour, anchor=tk.CENTER, command=self.start_ti, height=1)
+        profile_button.grid(sticky="news", padx=10, pady=10)
+        profile_button.config(width=int(screen_width / 85.3))
+
         # FRIENDS LIST
         self.listbox_frame = tk.Frame(root, bg=background_colour)
         self.listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news')
@@ -315,7 +313,6 @@ class CreateGUI:
         self.friends_list.bind("<<ListboxSelect>>", self.on_list_click)
         self.friends_list.bind("<KeyRelease-Down>", self.keypress_down)
         self.friends_list.bind("<KeyRelease-Up>", self.keypress_up)
-
         self.friends_list.pack(side='left', fill='y', expand=True)
         find_friends(self.friends_list)
         self.selection = 0
@@ -335,10 +332,15 @@ class CreateGUI:
         logout_bar.grid(row=4, column=0, columnspan=1, rowspan=6, sticky="news")
 
         logout_button = tk.Button(logout_bar, text="Logout", font=(general_font, 16), fg=text_colour, bg=figure_colour,
-                                  anchor=tk.CENTER, command=self.start_ti, height=1)
+                                  anchor=tk.CENTER, command=Login, height=1)
         # EDIT BACK LATER TO LOGOUT
         logout_button.grid(sticky="news", padx=10, pady=10)
         logout_button.config(width=int(screen_width / 85.3))
+
+        # clock
+        self.frame1 = tk.Frame(root)
+        self.frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
+        CreateCharts("", -3, '', 'clock', self.frame1, self.steamid)
 
         self.data(user_id)
         self.frames()
@@ -352,7 +354,6 @@ class CreateGUI:
         self.yaxis_2weeks = []
         self.used_games = []
         self.recent_playtime = Ai.games2Weeks(steamid)
-
         if not self.recent_playtime:
             self.xaxis_2weeks = -1
             self.yaxis_2weeks = -1
@@ -377,10 +378,6 @@ class CreateGUI:
 
     # Graph frames are created and data sent to the initiators
     def frames(self):
-        # FRAME 1
-        self.frame1 = tk.Frame(root)
-        self.frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("Recent playtime (minutes)", self.yaxis_2weeks, self.xaxis_2weeks, 'pie', self.frame1, self.steamid)
 
         # FRAME 2
         self.frame2 = tk.Frame(root)
@@ -395,12 +392,12 @@ class CreateGUI:
         # FRAME 4
         self.frame4 = tk.Frame(root)
         self.frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("pie chart demo 2", self.yaxis_2weeks, self.xaxis_2weeks, 'pie', self.frame4, self.steamid)
+        CreateCharts("Recommendation:", self.achievement_stats, '0', 'infomenu', self.frame4, self.steamid)
 
         # FRAME 5
         self.frame5 = tk.Frame(root)
         self.frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts(self.gamename, self.yaxis_2weeks, self.xaxis_2weeks, 'bar', self.frame5, self.steamid)
+        CreateCharts("Recent playtime (minutes)", self.yaxis_2weeks, self.xaxis_2weeks, 'pie', self.frame5, self.steamid)
 
         # FRAME 6
         self.frame6 = tk.Frame(root)
@@ -449,24 +446,38 @@ class Login:
 
 
 class Details:
-    def __init__(self):
+    def __init__(self, frame, title):
         self.details_window = tk.Toplevel(root)
-        self.details_window.geometry(f'{overlay_window_width}x{overlay_window_height}+{int(overlay_x)}+{int(overlay_y)}')
+        self.details_window.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
         self.details_window.configure(bg=background_colour, width=screen_width, height=screen_height)
         self.details_window.title('Details')
         self.details_window.grab_set()
+        print(frame)
+        info = ''
+        if str(frame) == '.!frame6':
+            info = "This is simply a welcome, I don't know what you expected"
+        elif str(frame) == '.!frame7':
+            info = 'Here you see how many minutes you or your friend \n has played their most recent games in the past 2 weeks'
+        elif str(frame) == '.!frame8':
+            info = 'An overview of when you unlocked achievements for your most played game in the past 2 weeks'
+        elif str(frame) == '.!frame9':
+            info = ''
+        elif str(frame) == '.!frame10':
+            info = ''
+        elif str(frame) == '.!frame11':
+            info = 'A bar with what percentage of achievements you have unlocked \n for the game you played the most last 2 weeks'
+
+        self.label = tk.Label(self.details_window, text=info, background=background_colour, foreground=text_colour, font=(general_font, 12))
+        self.label.pack()
         self.details_frame = tk.Frame(self.details_window)
         self.details_frame.pack(anchor='center', )
-        CreateCharts("Recent playtime (minutes)", -1, -1, 'pie', self.details_frame,
-                     76561198282499475)
-
         self.return_button = tk.Button(self.details_window, text='return', command=self.details_window.destroy)
         self.return_button.pack()
-
 
 
 if __name__ == '__main__':
     Login()
     root.mainloop()
+
 
 

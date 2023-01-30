@@ -435,36 +435,32 @@ def frequencyGamesAllFriends(steamId):
     if len(friendsDic) == 0:
         return {}
 
-    # List met alle namen van alle games die de vrienden heeft van de gebruiker
-    lstAllName = []
+    # Berekent per game hoeveel vrienden van de gebruiker deze game hebben.
+    lstAllName = {}
     for id in friendsDic.keys():
         ownGamDic = ownedGames(id)
-        if len(ownGamDic) != 0:
-            for name in ownGamDic.values():
-                lstAllName.append(name['name'])
-
-    # Telt de frequentie van alle games
-    freqDic = freq(lstAllName)
-    copyDic = freqDic
+        for name in ownGamDic.values():
+            if name not in lstAllName.keys():
+                lstAllName[name] = 1
+            else:
+                lstAllName[name] += 1
 
     frequencies = []
-    for fre in copyDic.values():
+    for fre in lstAllName.values():
         frequencies.append(fre)
-    stbFre = mergeSort(frequencies)
-    btsFre = bigToSmallSort(stbFre)
+    btsFre = bigToSmallSort(frequencies)
     top5 = btsFre[:5]
-    copy5 = top5
 
     names = []
     # Pakt de 5 hoogste frequenties van de frequentieteller van de games
     # Gaat door alle games heen om te kijken welke dezelfde frequentie heeft
     # Verwijdert uit beide de lijst en dictionary om dubbele data te verkomen
-    while len(copy5) != 0:
-        for name, frequency in copyDic.items():
-            if copy5[0] == copyDic[name]:
+    while len(top5) != 0:
+        for name, frequency in lstAllName.items():
+            if top5[0] == lstAllName[name]:
                 names.append(name)
-                copy5.pop(0)
-                copyDic.pop(name)
+                top5.pop(0)
+                lstAllName.pop(name)
                 break
     top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
     return top5MostPlayed
