@@ -151,7 +151,7 @@ class CreateCharts:
         else:
             if self.chart_type == "progress":
                 ax = fig.add_subplot(513)
-                self.title = f"Achievement % for {self.title}"
+                self.title = f"Achievement % for \n{self.title}"
             else:
                 ax = fig.add_subplot(111)
             ax.set_facecolor(backboard_colour)
@@ -165,7 +165,12 @@ class CreateCharts:
                 rect = plt.Rectangle((0, 0), self.data, 1, color=highlight_colour)
                 ax.add_patch(rect)
             elif self.chart_type == "pie":
-                ax.pie(self.data, labels=self.axis, colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'])
+                print(sum(self.data))
+
+                ax.pie(self.data, labels=self.axis, autopct=lambda p: f'{p}%\n{int(p*sum(self.data)/100)} min',
+                       colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'], startangle=90)
+                plt.rcParams["figure.figsize"] = [7.50, 3.50]
+                plt.rcParams["figure.autolayout"] = True
             else:
                 raise ValueError("Invalid chart type")
         return fig
@@ -396,7 +401,7 @@ class CreateGUI:
         # FRAME 2
         self.frame2 = tk.Frame(root)
         self.frame2.grid(row=2, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("Recent playtime (minutes)", self.yaxis_2weeks, self.xaxis_2weeks, 'bar', self.frame2, self.steamid)
+        CreateCharts("Recent playtime", self.yaxis_2weeks, self.xaxis_2weeks, 'pie', self.frame2, self.steamid)
 
         # FRAME 3
         self.frame3 = tk.Frame(root)
@@ -406,7 +411,7 @@ class CreateGUI:
         # FRAME 5
         self.frame5 = tk.Frame(root)
         self.frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("Recent playtime (minutes)", self.yaxis_2weeks, self.xaxis_2weeks, 'pie', self.frame5, self.steamid)
+        CreateCharts("Recent playtime", self.yaxis_2weeks, self.xaxis_2weeks, 'bar', self.frame5, self.steamid)
 
         # FRAME 6
         self.frame6 = tk.Frame(root)
@@ -474,12 +479,12 @@ class Details:
         if str(self.title) == 'Welcome':
             frame_title = 'Welcome'
             info = "This is simply a welcome,\n I don't know what you expected"
-        elif str(self.title) == 'Recent playtime (minutes)':
+        elif str(self.title) == 'Recent playtime':
             frame_title = 'Recent playtime'
             info = 'Here you see how many \nminutes you or your friend has played their \nmost recent games in the past 2 weeks'
-        elif str(self.title) == '.!frame9':
-            frame_title = ''
-            info = ''
+        elif str(self.title) == 'Your friends are playing':
+            frame_title = 'Your friends are playing'
+            info = 'How many of your friends \n share the same game'
         elif str(self.title) == '.!frame10':
             frame_title = ''
             info = ''
