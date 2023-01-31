@@ -56,10 +56,11 @@ if __name__ == '__main__':
     px = 1/plt.rcParams['figure.dpi']
 
 
+
+
 # Function to open the info windows when clicking on charts
 # takes the title of the selected graph
 def on_click(fig, title, frame, event):
-    print("you clicked on", title)
     Details(frame, title)
 
 
@@ -176,6 +177,8 @@ class CreateCharts:
     def initiate_chart(self):
         if not self.steamId == user_id:
             self.friendname = friends_dict[f'{self.steamId}']['name']
+        else:
+            self.friendname = user_name
         if self.data == -1:
             self.title = f'{self.friendname} has touched grass'
             self.chart_type = 'void'
@@ -201,11 +204,11 @@ class CreateGUI:
         self.index = 10
         self.gui()
 
+
     # when clicking a friend in the friends list
     # this function determines who you clicked on and checks if their profile is private using a function in Ai.py
     # calls either the refresh_data function or the profile_error function
     def list_select(self, event):
-        print(self.selection)
         self.picked = event.widget.get(self.selection)
         self.ID = flipped_friends_dict[self.picked]['id']
         private = private_checker(self.ID)
@@ -223,13 +226,16 @@ class CreateGUI:
         self.selection += 1
         self.friends_list.select_set(self.selection)
         self.list_select(event)
-        root.after(50, self.friends_list.focus_force())
+        self.refocus()
 
     def keypress_up(self, event):
         self.friends_list.select_clear(self.selection)
         self.selection -= 1
         self.friends_list.select_set(self.selection)
         self.list_select(event)
+        self.refocus()
+
+    def refocus(self):
         root.after(50, self.friends_list.focus_force())
 
     def show_profile(self):
@@ -240,7 +246,6 @@ class CreateGUI:
     def refresh_data(self):
         self.frame2.destroy()
         self.frame3.destroy()
-        self.frame4.destroy()
         self.frame5.destroy()
         self.frame6.destroy()
         self.steamid = self.ID
@@ -249,13 +254,10 @@ class CreateGUI:
 
     def start_ti(self):
         input = ti.start().strip()
-        print(input)
         if input == str(0):
             keyboard.press_and_release('Up')
-            print('i tried to press up')
         elif input == str(1):
             keyboard.press_and_release('Down')
-            print('i tried to press down')
 
     def profile_error(self):
         self.private_error = tk.Toplevel(root)
@@ -298,10 +300,10 @@ class CreateGUI:
         profile_button.grid(sticky="news", padx=10, pady=10)
         profile_button.config(width=int(screen_width / 85.3))
 
-        profile_button = tk.Button(profile_bar, text="Sensor on", font=(general_font, 16), fg=text_colour,
+        sensor_button = tk.Button(profile_bar, text="Sensor on", font=(general_font, 16), fg=text_colour,
                                    bg=figure_colour, anchor=tk.CENTER, command=self.start_ti, height=1)
-        profile_button.grid(sticky="news", padx=10, pady=10)
-        profile_button.config(width=int(screen_width / 85.3))
+        sensor_button.grid(sticky="news", padx=10, pady=10)
+        sensor_button.config(width=int(screen_width / 85.3))
 
         # FRIENDS LIST
         self.listbox_frame = tk.Frame(root, bg=background_colour)
@@ -327,7 +329,6 @@ class CreateGUI:
         under_text.pack(side='left')
 
         # LOGOUT BUTTON
-
         logout_bar = tk.Frame(root, bg=background_colour)
         logout_bar.grid(row=4, column=0, columnspan=1, rowspan=6, sticky="news")
 
@@ -337,22 +338,35 @@ class CreateGUI:
         logout_button.grid(sticky="news", padx=10, pady=10)
         logout_button.config(width=int(screen_width / 85.3))
 
+        self.statics()
+        self.data(user_id)
+        self.frames()
+        self.refocus()
+
+
+    def statics(self):
         # clock
         self.frame1 = tk.Frame(root)
         self.frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
         CreateCharts("", -3, '', 'clock', self.frame1, self.steamid)
 
-        self.data(user_id)
-        self.frames()
-        root.after(50, self.friends_list.focus_set())
-
-
+        self.xaxis_freq = []
+        self.yaxis_freq = []
+        self.frequency = Ai.frequencyGamesAllFriends(self.steamid)
+        for i in range(5):
+            self.xaxis_freq.append(self.frequency['name'][i])
+            self.yaxis_freq.append(self.frequency['frequency'][i])
+        # FRAME 4
+        self.frame4 = tk.Frame(root)
+        self.frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
+        CreateCharts("Your friends are playing", self.yaxis_freq, self.xaxis_freq, 'bar', self.frame4, self.steamid)
 
     def data(self, steamid):
         # Declare recent playtime
         self.xaxis_2weeks = []
         self.yaxis_2weeks = []
         self.used_games = []
+        self.mostplayed = []
         self.recent_playtime = Ai.games2Weeks(steamid)
         if not self.recent_playtime:
             self.xaxis_2weeks = -1
@@ -389,11 +403,6 @@ class CreateGUI:
         self.frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
         CreateCharts(f"{self.gamename}", self.achievement_stats, '0', 'infomenu', self.frame3, self.steamid)
 
-        # FRAME 4
-        self.frame4 = tk.Frame(root)
-        self.frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("Recommendation:", self.achievement_stats, '0', 'infomenu', self.frame4, self.steamid)
-
         # FRAME 5
         self.frame5 = tk.Frame(root)
         self.frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
@@ -403,6 +412,8 @@ class CreateGUI:
         self.frame6 = tk.Frame(root)
         self.frame6.grid(row=3, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
         CreateCharts(self.gamename, self.ach_percentage, '0', 'progress', self.frame6, self.steamid)
+
+
 
 
 class Login:
@@ -419,7 +430,7 @@ class Login:
         self.username_label.pack(expand=True)
 
         self.login_box = tk.Entry(self.login_screen, font=28)
-        self.login_box.insert(0, '76561198111929702')
+        self.login_box.insert(0, '76561198282499475')
         self.login_box.pack(expand=True)
 
         self.login_button = tk.Button(self.login_screen, text='Login', command=self.start_login, font=28)
@@ -433,6 +444,8 @@ class Login:
     def start_login(self):
         global user_id
         user_id = self.login_box.get()
+        global user_name
+        user_name = Ai.personalData(user_id)['name']
         private = private_checker(user_id)
         if private is None:
             self.login_label.config(text="Invalid steam id")
@@ -447,32 +460,45 @@ class Login:
 
 class Details:
     def __init__(self, frame, title):
+        self.title = title
+        self.frame = frame
         self.details_window = tk.Toplevel(root)
         self.details_window.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
         self.details_window.configure(bg=background_colour, width=screen_width, height=screen_height)
         self.details_window.title('Details')
         self.details_window.grab_set()
-        print(frame)
-        info = ''
-        if str(frame) == '.!frame6':
-            info = "This is simply a welcome, I don't know what you expected"
-        elif str(frame) == '.!frame7':
-            info = 'Here you see how many minutes you or your friend \n has played their most recent games in the past 2 weeks'
-        elif str(frame) == '.!frame8':
-            info = 'An overview of when you unlocked achievements for your most played game in the past 2 weeks'
-        elif str(frame) == '.!frame9':
-            info = ''
-        elif str(frame) == '.!frame10':
-            info = ''
-        elif str(frame) == '.!frame11':
-            info = 'A bar with what percentage of achievements you have unlocked \n for the game you played the most last 2 weeks'
+        self.details_build()
 
-        self.label = tk.Label(self.details_window, text=info, background=background_colour, foreground=text_colour, font=(general_font, 12))
-        self.label.pack()
-        self.details_frame = tk.Frame(self.details_window)
-        self.details_frame.pack(anchor='center', )
-        self.return_button = tk.Button(self.details_window, text='return', command=self.details_window.destroy)
-        self.return_button.pack()
+    def details_build(self):
+
+        if str(self.title) == 'Welcome':
+            frame_title = 'Welcome'
+            info = "This is simply a welcome,\n I don't know what you expected"
+        elif str(self.title) == 'Recent playtime (minutes)':
+            frame_title = 'Recent playtime'
+            info = 'Here you see how many \nminutes you or your friend has played their \nmost recent games in the past 2 weeks'
+        elif str(self.title) == '.!frame9':
+            frame_title = ''
+            info = ''
+        elif str(self.title) == '.!frame10':
+            frame_title = ''
+            info = ''
+        else:
+            frame_title = 'Achievements'
+            info = 'An overview of \nunlocked achievements for your most \nplayed game in the past 2 weeks'
+
+        self.return_button = tk.Button(self.details_window, text='return', font=(general_font, 16), fg=text_colour,
+                                       bg=figure_colour, anchor=tk.CENTER, command=self.details_return, height=2)
+        self.return_button.config(width=int(screen_width / 85.3))
+        self.return_button.pack(side=tk.BOTTOM, pady=10)
+
+        self.label = tk.Label(self.details_window, text=info, bg=background_colour, fg=text_colour, font=(general_font, 18))
+        self.label.pack(side=tk.BOTTOM, pady=10)
+
+        self.title_label = tk.Label(self.details_window, text=frame_title, bg=background_colour, fg=text_colour, font=(general_font, 26))
+        self.title_label.pack(side=tk.BOTTOM, pady=10)
+    def details_return(self):
+        self.details_window.destroy()
 
 
 if __name__ == '__main__':

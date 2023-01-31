@@ -1,7 +1,5 @@
 import requests
-
 key = '882B75E94431CD842CCD402F7E9C1A73'
-
 
 # Algemene statistiek functies______________________________________
 def mergeSort(lst):
@@ -194,6 +192,28 @@ def privateChecker(steamId):
     if len(recGa['response']) == 0:
         state['games'] = True
     return state
+
+
+def personalData(steamId):
+    """
+    Haalt data van steam user op
+    :param steamId: id van gebruiker
+    :return:
+    een dictionary met naam, profiellink en avatar
+    """
+    try:
+        request = requests.get(
+            f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={steamId}')
+        friendsJson = request.json()
+    except requests.exceptions.JSONDecodeError:
+        return None
+    # Als de id invalide is
+    if len(friendsJson['response']['players']) == 0:
+        return None
+    playerDic = {'name' : friendsJson['response']['players'][0]['personaname'],
+                 'link' : friendsJson['response']['players'][0]['profileurl'],
+                 'avatar' : friendsJson['response']['players'][0]['avatarmedium']}
+    return playerDic
 
 
 def friendlistData(steamId):
@@ -435,32 +455,36 @@ def frequencyGamesAllFriends(steamId):
     if len(friendsDic) == 0:
         return {}
 
-    # Berekent per game hoeveel vrienden van de gebruiker deze game hebben.
-    lstAllName = {}
+    # List met alle namen van alle games die de vrienden heeft van de gebruiker
+    lstAllName = []
     for id in friendsDic.keys():
         ownGamDic = ownedGames(id)
-        for name in ownGamDic.values():
-            if name not in lstAllName.keys():
-                lstAllName[name] = 1
-            else:
-                lstAllName[name] += 1
+        if len(ownGamDic) != 0:
+            for name in ownGamDic.values():
+                lstAllName.append(name['name'])
+
+    # Telt de frequentie van alle games
+    freqDic = freq(lstAllName)
+    copyDic = freqDic
 
     frequencies = []
-    for fre in lstAllName.values():
+    for fre in copyDic.values():
         frequencies.append(fre)
-    btsFre = bigToSmallSort(frequencies)
+    stbFre = mergeSort(frequencies)
+    btsFre = bigToSmallSort(stbFre)
     top5 = btsFre[:5]
+    copy5 = top5
 
     names = []
     # Pakt de 5 hoogste frequenties van de frequentieteller van de games
     # Gaat door alle games heen om te kijken welke dezelfde frequentie heeft
     # Verwijdert uit beide de lijst en dictionary om dubbele data te verkomen
-    while len(top5) != 0:
-        for name, frequency in lstAllName.items():
-            if top5[0] == lstAllName[name]:
+    while len(copy5) != 0:
+        for name, frequency in copyDic.items():
+            if copy5[0] == copyDic[name]:
                 names.append(name)
-                top5.pop(0)
-                lstAllName.pop(name)
+                copy5.pop(0)
+                copyDic.pop(name)
                 break
     top5MostPlayed = {'name': names, 'frequency': btsFre[:5]}
     return top5MostPlayed
