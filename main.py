@@ -52,6 +52,8 @@ if __name__ == '__main__':
 
     # Font management
     general_font = 'Arial'
+    general_font_size = '14'
+    title_font_size = '20'
     plt.rcParams['text.color'] = text_colour
     px = 1/plt.rcParams['figure.dpi']
 
@@ -124,29 +126,32 @@ class CreateCharts:
                     if type(data) == int:
                         new_data['time'].append(datetime.utcfromtimestamp(data).strftime('%Y-%m-%d'))
                     else:
-                        new_data['name'].append(data)
+                        if len(data) > 20:
+                            new_data['name'].append(data[:20])
+                        else:
+                            new_data['name'].append(data)
             content = pd.DataFrame(new_data, columns=None)
-            fig.text(0.5, 0.8, 'Recent achievements', fontsize=30, horizontalalignment='center')
-            fig.text(0.5, 0.7, self.title, fontsize=20, horizontalalignment='center')
-            fig.text(0.5, 0.4, content.to_string(index=False, header=False), fontsize=12, horizontalalignment='center')
+            fig.text(0.5, 0.8, 'Recent achievements', fontsize=title_font_size, horizontalalignment='center')
+            fig.text(0.5, 0.7, self.title, fontsize=general_font_size, horizontalalignment='center')
+            fig.text(0.5, 0.4, content.to_string(index=False, header=False), fontsize=general_font_size, horizontalalignment='center')
             return fig
         elif self.chart_type == "welcome":
-            fig.text(0.5, 0.7, self.title, fontsize=20, horizontalalignment='center')
-            fig.text(0.5, 0.4, 'hi there', fontsize=12, horizontalalignment='center')
+            fig.text(0.5, 0.7, self.title, fontsize=title_font_size, horizontalalignment='center')
+            fig.text(0.5, 0.4, 'hi there', fontsize=general_font_size, horizontalalignment='center')
             return fig
         elif self.chart_type == 'clock':
             string = strftime('%d/%m/%Y')
-            fig.text(0.5, 0.7, self.title, fontsize=30, horizontalalignment='center')
-            fig.text(0.5, 0.5, "today's date:", fontsize=20, horizontalalignment='center')
-            fig.text(0.5, 0.4, string, fontsize=20, horizontalalignment='center')
+            fig.text(0.5, 0.7, self.title, fontsize=title_font_size, horizontalalignment='center')
+            fig.text(0.5, 0.5, "today's date:", fontsize=general_font_size, horizontalalignment='center')
+            fig.text(0.5, 0.4, string, fontsize=general_font_size, horizontalalignment='center')
             return fig
         elif self.chart_type == "void":
             plt.style.use('dark_background')
             if self.data == -1:
-                fig.text(0.5, 0.8, 'Recent playtime (minutes)', fontsize=20, horizontalalignment='center')
+                fig.text(0.5, 0.8, 'Recent playtime (minutes)', fontsize=general_font_size, horizontalalignment='center')
             elif self.data == -2:
-                fig.text(0.5, 0.8, 'Recent achievements', fontsize=30, horizontalalignment='center')
-            fig.text(0.5, 0.5, self.title, fontsize=14, horizontalalignment='center')
+                fig.text(0.5, 0.8, 'Recent achievements', fontsize=title_font_size, horizontalalignment='center')
+            fig.text(0.5, 0.5, self.title, fontsize=general_font_size, horizontalalignment='center')
             return fig
         else:
             if self.chart_type == "progress":
@@ -155,9 +160,13 @@ class CreateCharts:
             else:
                 ax = fig.add_subplot(111)
             ax.set_facecolor(backboard_colour)
-            ax.set_title(self.title, fontsize=20)
+            ax.set_title(self.title, fontsize=general_font_size)
             if self.chart_type == "bar":
-                bars = ax.barh(self.axis, self.data)
+                for game in self.axis:
+                    if len(game) > 20:
+                        self.axis.insert(self.axis.index(game), game[:20])
+                        self.axis.remove(game)
+                bars = ax.bar(self.axis, self.data)
                 ax.bar_label(bars)
             elif self.chart_type == "progress":
                 ax.set_xlim([0, 100])
@@ -165,12 +174,8 @@ class CreateCharts:
                 rect = plt.Rectangle((0, 0), self.data, 1, color=highlight_colour)
                 ax.add_patch(rect)
             elif self.chart_type == "pie":
-                print(sum(self.data))
-
-                ax.pie(self.data, labels=self.axis, autopct=lambda p: f'{p}%\n{int(p*sum(self.data)/100)} min',
+                ax.pie(self.data, labels=self.axis, autopct=lambda p: f'{round(p)}%\n{int(p*sum(self.data)/100)} min',
                        colors=['#1b2838', 'black', '#c7d5e0', '#66c0f4', '#171a21'], startangle=90)
-                plt.rcParams["figure.figsize"] = [7.50, 3.50]
-                plt.rcParams["figure.autolayout"] = True
             else:
                 raise ValueError("Invalid chart type")
         return fig
@@ -272,10 +277,10 @@ class CreateGUI:
         self.private_error.grab_set()
 
         self.error_label = tk.Label(self.private_error, text="This profile is private",
-                                    font=(general_font, 30), fg=text_colour, bg=background_colour, pady=20)
+                                    font=(general_font, title_font_size), fg=text_colour, bg=background_colour, pady=20)
         self.error_label.pack()
 
-        self.ok_button = tk.Button(self.private_error, text='OK', font=(general_font, 20),
+        self.ok_button = tk.Button(self.private_error, text='OK', font=(general_font, general_font_size),
                                     command=self.private_error.destroy)
         self.ok_button.pack(expand=True)
 
@@ -292,7 +297,7 @@ class CreateGUI:
         title_bar.grid(row=0, column=1, columnspan=3, sticky="wsne")
         title_bar.grid_columnconfigure(2, weight=1)
 
-        title_label = tk.Label(title_bar, text="Steam Dashboard", font=(general_font, 30), fg=text_colour,\
+        title_label = tk.Label(title_bar, text="Steam Dashboard", font=(general_font, title_font_size), fg=text_colour,\
                                bg=backboard_colour, anchor=tk.CENTER)
         title_label.grid(row=0, column=2, pady=screen_height/19.2)
 
@@ -300,12 +305,12 @@ class CreateGUI:
         profile_bar = tk.Frame(root, bg=background_colour)
         profile_bar.grid(row=0, column=0, columnspan=1, rowspan=6, sticky="news")
 
-        profile_button = tk.Button(profile_bar, text="Back to my data", font=(general_font, 16), fg=text_colour,
+        profile_button = tk.Button(profile_bar, text="Back to my data", font=(general_font, general_font_size), fg=text_colour,
                                    bg=figure_colour, anchor=tk.CENTER, command=self.show_profile, height=4)
         profile_button.grid(sticky="news", padx=10, pady=10)
         profile_button.config(width=int(screen_width / 85.3))
 
-        sensor_button = tk.Button(profile_bar, text="Sensor on", font=(general_font, 16), fg=text_colour,
+        sensor_button = tk.Button(profile_bar, text="Sensor on", font=(general_font, general_font_size), fg=text_colour,
                                    bg=figure_colour, anchor=tk.CENTER, command=self.start_ti, height=1)
         sensor_button.grid(sticky="news", padx=10, pady=10)
         sensor_button.config(width=int(screen_width / 85.3))
@@ -315,7 +320,7 @@ class CreateGUI:
         self.listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news')
 
         self.friends_list = tk.Listbox(self.listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single',\
-                                  font=(general_font, 17), selectbackground=highlight_colour)
+                                  font=(general_font, general_font_size), selectbackground=highlight_colour)
         self.friends_list.config(highlightthickness=0)
         self.friends_list.bind("<<ListboxSelect>>", self.on_list_click)
         self.friends_list.bind("<KeyRelease-Down>", self.keypress_down)
@@ -330,14 +335,14 @@ class CreateGUI:
         bottom_frame = tk.Frame(root, bg=background_colour,)
         bottom_frame.grid(row=4, column=1, columnspan=3, sticky='news')
 
-        under_text = tk.Label(bottom_frame, text='hello there', bg=background_colour, fg=text_colour, font=(general_font, 20))
+        under_text = tk.Label(bottom_frame, text='hello there', bg=background_colour, fg=text_colour, font=(general_font, title_font_size))
         under_text.pack(side='left')
 
         # LOGOUT BUTTON
         logout_bar = tk.Frame(root, bg=background_colour)
         logout_bar.grid(row=4, column=0, columnspan=1, rowspan=6, sticky="news")
 
-        logout_button = tk.Button(logout_bar, text="Logout", font=(general_font, 16), fg=text_colour, bg=figure_colour,
+        logout_button = tk.Button(logout_bar, text="Logout", font=(general_font, general_font_size), fg=text_colour, bg=figure_colour,
                                   anchor=tk.CENTER, command=Login, height=1)
         # EDIT BACK LATER TO LOGOUT
         logout_button.grid(sticky="news", padx=10, pady=10)
@@ -428,20 +433,20 @@ class Login:
         self.login_screen.title('Login')
         self.login_screen.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
 
-        self.welcome_label = tk.Label(self.login_screen, text="Please enter your login details", font=(general_font, 28), fg=text_colour, bg=background_colour)
+        self.welcome_label = tk.Label(self.login_screen, text="Please enter your login details", font=(general_font, title_font_size), fg=text_colour, bg=background_colour)
         self.welcome_label.pack(expand=True)
 
-        self. username_label = tk.Label(self.login_screen, text="SteamID:", font=(general_font, 20), fg=text_colour, bg=background_colour)
+        self. username_label = tk.Label(self.login_screen, text="SteamID:", font=(general_font, general_font_size), fg=text_colour, bg=background_colour)
         self.username_label.pack(expand=True)
 
-        self.login_box = tk.Entry(self.login_screen, font=28)
+        self.login_box = tk.Entry(self.login_screen, font=title_font_size)
         self.login_box.insert(0, '76561198282499475')
         self.login_box.pack(expand=True)
 
-        self.login_button = tk.Button(self.login_screen, text='Login', command=self.start_login, font=28)
+        self.login_button = tk.Button(self.login_screen, text='Login', command=self.start_login, font=title_font_size)
         self.login_button.pack(expand=True)
 
-        self.login_label = tk.Label(self.login_screen, text='', font=(general_font, 28), fg=text_colour, bg=background_colour)
+        self.login_label = tk.Label(self.login_screen, text='', font=(general_font, title_font_size), fg=text_colour, bg=background_colour)
         self.login_label.pack(expand=True)
 
         root.withdraw()
@@ -492,15 +497,15 @@ class Details:
             frame_title = 'Achievements'
             info = 'An overview of \nunlocked achievements for your most \nplayed game in the past 2 weeks'
 
-        self.return_button = tk.Button(self.details_window, text='return', font=(general_font, 16), fg=text_colour,
+        self.return_button = tk.Button(self.details_window, text='return', font=(general_font, general_font_size), fg=text_colour,
                                        bg=figure_colour, anchor=tk.CENTER, command=self.details_return, height=2)
         self.return_button.config(width=int(screen_width / 85.3))
         self.return_button.pack(side=tk.BOTTOM, pady=10)
 
-        self.label = tk.Label(self.details_window, text=info, bg=background_colour, fg=text_colour, font=(general_font, 18))
+        self.label = tk.Label(self.details_window, text=info, bg=background_colour, fg=text_colour, font=(general_font, general_font_size))
         self.label.pack(side=tk.BOTTOM, pady=10)
 
-        self.title_label = tk.Label(self.details_window, text=frame_title, bg=background_colour, fg=text_colour, font=(general_font, 26))
+        self.title_label = tk.Label(self.details_window, text=frame_title, bg=background_colour, fg=text_colour, font=(general_font, title_font_size))
         self.title_label.pack(side=tk.BOTTOM, pady=10)
     def details_return(self):
         self.details_window.destroy()
