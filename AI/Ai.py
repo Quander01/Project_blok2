@@ -1,9 +1,5 @@
 import requests
-
 key = '882B75E94431CD842CCD402F7E9C1A73'
-steamId = '76561198111929702'
-appId = '367520'
-
 
 # Algemene statistiek functies______________________________________
 def mergeSort(lst):
@@ -196,6 +192,28 @@ def privateChecker(steamId):
     if len(recGa['response']) == 0:
         state['games'] = True
     return state
+
+
+def personalData(steamId):
+    """
+    Haalt data van steam user op
+    :param steamId: id van gebruiker
+    :return:
+    een dictionary met naam, profiellink en avatar
+    """
+    try:
+        request = requests.get(
+            f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={steamId}')
+        friendsJson = request.json()
+    except requests.exceptions.JSONDecodeError:
+        return None
+    # Als de id invalide is
+    if len(friendsJson['response']['players']) == 0:
+        return None
+    playerDic = {'name' : friendsJson['response']['players'][0]['personaname'],
+                 'link' : friendsJson['response']['players'][0]['profileurl'],
+                 'avatar' : friendsJson['response']['players'][0]['avatarmedium']}
+    return playerDic
 
 
 def friendlistData(steamId):
