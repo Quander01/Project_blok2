@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 from AI import Ai
 from TI import ti
 import keyboard
+from PIL import Image, ImageTk
 
 
 # declares all globals for styling
@@ -301,6 +302,14 @@ class CreateGUI:
                                bg=backboard_colour, anchor=tk.CENTER)
         title_label.grid(row=0, column=2, pady=screen_height/19.2)
 
+        logo = Image.open('Resources/Steam_icon.png')
+        print(logo.mode)
+        steam_logo = logo.resize((100, 100))
+        image = ImageTk.PhotoImage(steam_logo)
+        logo_label = tk.Label(title_bar, bg=backboard_colour, image=image)
+        logo_label.photo = image
+        logo_label.grid(row=0, column=3, padx=20)
+
         # PROFILE BUTTON
         profile_bar = tk.Frame(root, bg=background_colour)
         profile_bar.grid(row=0, column=0, columnspan=1, rowspan=6, sticky="news")
@@ -355,6 +364,7 @@ class CreateGUI:
 
 
     def statics(self):
+
         # clock
         self.frame1 = tk.Frame(root)
         self.frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
