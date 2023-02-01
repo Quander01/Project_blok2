@@ -13,7 +13,7 @@ from AI import Ai
 from TI import ti
 import keyboard
 from PIL import Image, ImageTk
-
+import webbrowser
 
 # declares all globals for styling
 if __name__ == '__main__':
@@ -140,9 +140,9 @@ class CreateCharts:
             fig.text(0.5, 0.7, self.title, fontsize=general_font_size, horizontalalignment='center')
             fig.text(0.5, 0.4, content.to_string(index=False, header=False), fontsize=general_font_size, horizontalalignment='center')
             return fig
-        elif self.chart_type == "welcome":
+        elif self.chart_type == "text":
             fig.text(0.5, 0.7, self.title, fontsize=title_font_size, horizontalalignment='center')
-            fig.text(0.5, 0.4, 'hi there', fontsize=general_font_size, horizontalalignment='center')
+            fig.text(0.5, 0.4, f'{int(self.data)} minute(s) of playtime average', fontsize=general_font_size, horizontalalignment='center')
             return fig
         elif self.chart_type == 'clock':
             string = strftime('%d/%m/%Y')
@@ -264,6 +264,10 @@ class CreateGUI:
         self.refresh_data()
         return
 
+    def on_logo_click(self, event):
+        webbrowser.open(f'https://steamcommunity.com/profiles/{user_id}')
+        return
+
     # Destroy previous frames with graphs and initiate process to create new ones
     def refresh_data(self):
         self.frame2.destroy()
@@ -321,6 +325,7 @@ class CreateGUI:
         image = ImageTk.PhotoImage(steam_logo)
         logo_label = tk.Label(title_bar, bg=backboard_colour, image=image)
         logo_label.photo = image
+        logo_label.bind('<Button-1>', self.on_logo_click)
         logo_label.grid(row=0, column=3, padx=20)
 
         # PROFILE BUTTON
@@ -421,6 +426,9 @@ class CreateGUI:
             self.achievement_stats = Ai.recentGamesAchievements(steamid, self.mostplayed)
             self.ach_percentage = self.achievements['achprocent']
 
+        self.average2weeks = Ai.averageGames2Weeks(self.steamid)
+
+
     # Graph frames are created and data sent to the initiators
     def frames(self):
         # FRAME 2
@@ -431,7 +439,7 @@ class CreateGUI:
         # FRAME 3
         self.frame3 = tk.Frame(root)
         self.frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("Recent playtime", self.yaxis_2weeks, self.xaxis_2weeks, 'bar', self.frame3, self.steamid)
+        CreateCharts("Average playtime for games", self.average2weeks, 'o', 'text', self.frame3, self.steamid)
 
         # FRAME 5
         self.frame5 = tk.Frame(root)
@@ -518,9 +526,9 @@ class Details:
         elif str(self.title) == 'Your friends are playing':
             frame_title = 'Your friends are playing'
             info = 'How many of your friends \n share the same game'
-        elif str(self.title) == '.!frame10':
-            frame_title = ''
-            info = ''
+        elif str(self.title) == 'Average playtime for games':
+            frame_title = 'Average playtime for games'
+            info = 'Average amount of time \n you played each game in the past 2 weeks in minutes'
         else:
             frame_title = 'Achievements'
             info = 'An overview of \nunlocked achievements for your most \nplayed game in the past 2 weeks'
@@ -531,7 +539,7 @@ class Details:
         self.return_button.config(width=int(screen_width / 85.3))
         self.return_button.pack(side=tk.BOTTOM, pady=10)
 
-        self.label = tk.Label(self.details_window, text=info, bg=background_colour, fg=text_colour, 
+        self.label = tk.Label(self.details_window, text=info, bg=background_colour, fg=text_colour,
                               font=(general_font, general_font_size))
         self.label.pack(side=tk.BOTTOM, pady=10)
 
