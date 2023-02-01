@@ -264,6 +264,7 @@ class CreateGUI:
         self.refresh_data()
         return
 
+    # When clicking the steamlogo in the top right corner, open the users steam page
     def on_logo_click(self, event):
         webbrowser.open(f'https://steamcommunity.com/profiles/{user_id}')
         return
@@ -278,7 +279,7 @@ class CreateGUI:
         self.data(self.steamid)
         self.frames()
 
-    # Start the PI to check input, then imitate a keypress
+    # Start the PI to check input, then imitate a keypress. If there is no sensor connected give an error window
     def start_ti(self):
         try:
             input = ti.start().strip()
@@ -286,10 +287,10 @@ class CreateGUI:
                 keyboard.press_and_release('Up')
             elif input == str(1):
                 keyboard.press_and_release('Down')
-
         except:
             self.sensor_error()
 
+    # Displays a window with "The sensor is not connected"
     def sensor_error(self):
         self.private_error = tk.Toplevel(root)
         self.private_error.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
@@ -305,7 +306,7 @@ class CreateGUI:
                                    command=self.private_error.destroy)
         self.ok_button.pack(expand=True)
 
-    # Displays a window with "this profile is private"
+    # Displays a window with "This profile is private"
     def profile_error(self):
         self.private_error = tk.Toplevel(root)
         self.private_error.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
@@ -320,6 +321,12 @@ class CreateGUI:
         self.ok_button = tk.Button(self.private_error, text='OK', font=(general_font, general_font_size),
                                    command=self.private_error.destroy)
         self.ok_button.pack(expand=True)
+
+    def logo_on_enter(self, event):
+        self.logo_label.configure(bg=highlight_colour)
+
+    def logo_on_leave(self, event):
+        self.logo_label.configure(bg=backboard_colour)
 
     # Makes the root gui frames, top bar with title, profile button, friends list and under frame
     # Also starts the data creation process
@@ -342,10 +349,13 @@ class CreateGUI:
         logo = Image.open('Resources/Steam_icon.png')
         steam_logo = logo.resize((100, 100))
         image = ImageTk.PhotoImage(steam_logo)
-        logo_label = tk.Label(title_bar, bg=backboard_colour, image=image)
-        logo_label.photo = image
-        logo_label.bind('<Button-1>', self.on_logo_click)
-        logo_label.grid(row=0, column=3, padx=20)
+        self.logo_label = tk.Label(title_bar, bg=backboard_colour, image=image)
+        self.logo_label.photo = image
+        self.logo_label.bind('<Button-1>', self.on_logo_click)
+        self.logo_label.bind("<Enter>", functools.partial(self.logo_on_enter))
+        self.logo_label.bind("<Leave>", functools.partial(self.logo_on_leave))
+
+        self.logo_label.grid(row=0, column=3, padx=20)
 
         # PROFILE BUTTON
         profile_bar = tk.Frame(root, bg=background_colour)
@@ -446,7 +456,6 @@ class CreateGUI:
             self.ach_percentage = self.achievements['achprocent']
 
         self.average2weeks = Ai.averageGames2Weeks(self.steamid)
-
 
     # Graph frames are created and data sent to the initiators
     def frames(self):
