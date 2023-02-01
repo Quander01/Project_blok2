@@ -59,8 +59,6 @@ if __name__ == '__main__':
     px = 1/plt.rcParams['figure.dpi']
 
 
-
-
 # Function to open the info windows when clicking on charts
 # takes the title of the selected graph
 def on_click(fig, title, frame, event):
@@ -92,7 +90,7 @@ def find_friends(friends_list):
     return
 
 
-# hides the root window and opens the login window
+# closes the root window and opens the login window
 def logout_function():
     for widget in root.winfo_children():
         widget.destroy()
@@ -100,10 +98,15 @@ def logout_function():
     return
 
 
+# Checks private settings of the given Steam ID
+# returns a dictionary with True or False for games and friends
 def private_checker(steamid):
     return Ai.privateChecker(steamid)
 
 
+# Class to create the graphs with
+# Takes Title of the graph, numerical data, axis data, type of chart,
+# frame to render on and the steamid of whose data is required
 class CreateCharts:
     def __init__(self, title, data, axis, chart_type, frame, steamid):
         self.steamId = steamid
@@ -114,8 +117,9 @@ class CreateCharts:
         self.frame = frame
         self.initiate_chart()
 
-    # Function takes in three parameters: title of the figure, axis names and data to display.
-    # It creates and returns a pie chart using the matplotlib library.
+    # Function creates and returns chart using the matplotlib library.
+    # Type of the chart changes settings
+    # Returns the figure
     def create_chart(self):
         plt.rcParams['text.color'] = text_colour
         fig = Figure(facecolor=figure_colour, figsize=(screen_width / 3.8 * px, screen_height / 2.7 * px))
@@ -125,7 +129,7 @@ class CreateCharts:
             for content in self.data.values():
                 for data in content:
                     if type(data) == int:
-                        new_data['time'].append(datetime.utcfromtimestamp(data).strftime('%Y-%m-%d'))
+                        new_data['time'].append(datetime.utcfromtimestamp(data).strftime('%d-%m-%Y'))
                     else:
                         if len(data) > 20:
                             new_data['name'].append(data[:20])
@@ -208,16 +212,15 @@ class CreateCharts:
         canvas.draw()
 
 
+# Creates the GUI on first startup
 class CreateGUI:
-
     def __init__(self, steamid):
         self.steamid = steamid
         self.index = 10
         self.gui()
 
-
-    # when clicking a friend in the friends list
-    # this function determines who you clicked on and checks if their profile is private using a function in Ai.py
+    # When clicking a friend in the friends list
+    # determines who you clicked on and checks if their profile is private with private_checker()
     # calls either the refresh_data function or the profile_error function
     def list_select(self, event):
         self.picked = event.widget.get(self.selection)
@@ -228,10 +231,13 @@ class CreateGUI:
         else:
             self.refresh_data()
 
+    # When clicking on the friends list check which friends is selected and go to list_select()
     def on_list_click(self, event):
         self.selection = event.widget.curselection()[0]
         self.list_select(event)
 
+    # when you press the "down" key on your keyboard, clear list selection and select the previous selection + 1,
+    # then go to list_select()
     def keypress_down(self, event):
         self.friends_list.select_clear(self.selection)
         self.selection += 1
@@ -239,6 +245,8 @@ class CreateGUI:
         self.list_select(event)
         self.refocus()
 
+    # when you press the "up" key on your keyboard, clear list selection and select the previous selection - 1,
+    # then go to list_select()
     def keypress_up(self, event):
         self.friends_list.select_clear(self.selection)
         self.selection -= 1
@@ -246,14 +254,17 @@ class CreateGUI:
         self.list_select(event)
         self.refocus()
 
+    # Force the window to refocus on the friends list so the arrow keys keep working
     def refocus(self):
         root.after(50, self.friends_list.focus_force())
 
+    # Sets the ID to the id used at first login, then refresh the data
     def show_profile(self):
         self.ID = user_id
         self.refresh_data()
         return
 
+    # Destroy previous frames with graphs and initiate process to create new ones
     def refresh_data(self):
         self.frame2.destroy()
         self.frame3.destroy()
@@ -263,6 +274,7 @@ class CreateGUI:
         self.data(self.steamid)
         self.frames()
 
+    # Start the PI to check input, then imitate a keypress
     def start_ti(self):
         input = ti.start().strip()
         if input == str(0):
@@ -270,6 +282,7 @@ class CreateGUI:
         elif input == str(1):
             keyboard.press_and_release('Down')
 
+    # Displays a window with "this profile is private"
     def profile_error(self):
         self.private_error = tk.Toplevel(root)
         self.private_error.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
@@ -282,10 +295,11 @@ class CreateGUI:
         self.error_label.pack()
 
         self.ok_button = tk.Button(self.private_error, text='OK', font=(general_font, general_font_size),
-                                    command=self.private_error.destroy)
+                                   command=self.private_error.destroy)
         self.ok_button.pack(expand=True)
 
     # Makes the root gui frames, top bar with title, profile button, friends list and under frame
+    # Also starts the data creation process
     def gui(self):
         root.title("Steam dashboard")
         root.configure(bg=background_colour)
@@ -298,12 +312,11 @@ class CreateGUI:
         title_bar.grid(row=0, column=1, columnspan=3, sticky="wsne")
         title_bar.grid_columnconfigure(2, weight=1)
 
-        title_label = tk.Label(title_bar, text="Steam Dashboard", font=(general_font, title_font_size), fg=text_colour,\
+        title_label = tk.Label(title_bar, text="Steam Dashboard", font=(general_font, title_font_size), fg=text_colour,
                                bg=backboard_colour, anchor=tk.CENTER)
         title_label.grid(row=0, column=2, pady=screen_height/19.2)
 
         logo = Image.open('Resources/Steam_icon.png')
-        print(logo.mode)
         steam_logo = logo.resize((100, 100))
         image = ImageTk.PhotoImage(steam_logo)
         logo_label = tk.Label(title_bar, bg=backboard_colour, image=image)
@@ -314,23 +327,26 @@ class CreateGUI:
         profile_bar = tk.Frame(root, bg=background_colour)
         profile_bar.grid(row=0, column=0, columnspan=1, rowspan=6, sticky="news")
 
-        profile_button = tk.Button(profile_bar, text="Back to my data", font=(general_font, general_font_size), fg=text_colour,
-                                   bg=figure_colour, anchor=tk.CENTER, command=self.show_profile, height=4)
+        profile_button = tk.Button(profile_bar, text="Back to my data", font=(general_font, general_font_size),
+                                   fg=text_colour, bg=figure_colour, anchor=tk.CENTER,
+                                   command=self.show_profile, height=4)
         profile_button.grid(sticky="news", padx=10, pady=10)
         profile_button.config(width=int(screen_width / 85.3))
 
-        sensor_button = tk.Button(profile_bar, text="Sensor on", font=(general_font, general_font_size), fg=text_colour,
-                                   bg=figure_colour, anchor=tk.CENTER, command=self.start_ti, height=1)
+        sensor_button = tk.Button(profile_bar, text="Activate sensor", font=(general_font, general_font_size),
+                                  fg=text_colour, bg=figure_colour, anchor=tk.CENTER, command=self.start_ti, height=1)
         sensor_button.grid(sticky="news", padx=10, pady=10)
         sensor_button.config(width=int(screen_width / 85.3))
 
-        # FRIENDS LIST
+        # Friends list
         self.listbox_frame = tk.Frame(root, bg=background_colour)
         self.listbox_frame.grid(row=2, column=0, rowspan=3, sticky='news')
 
-        self.friends_list = tk.Listbox(self.listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single',\
+        self.friends_list = tk.Listbox(self.listbox_frame, bg=figure_colour, fg=text_colour, selectmode='single',
                                   font=(general_font, general_font_size), selectbackground=highlight_colour)
         self.friends_list.config(highlightthickness=0)
+
+        # Bind the onclick, keyup and keydown events to the friendslist
         self.friends_list.bind("<<ListboxSelect>>", self.on_list_click)
         self.friends_list.bind("<KeyRelease-Down>", self.keypress_down)
         self.friends_list.bind("<KeyRelease-Up>", self.keypress_up)
@@ -339,32 +355,27 @@ class CreateGUI:
         self.selection = 0
         self.friends_list.select_set(self.selection)
 
-
-        # BOTTOM FRAME
+        # Bottom frame
         bottom_frame = tk.Frame(root, bg=background_colour,)
         bottom_frame.grid(row=4, column=1, columnspan=3, sticky='news')
 
-        under_text = tk.Label(bottom_frame, text='hello there', bg=background_colour, fg=text_colour, font=(general_font, title_font_size))
-        under_text.pack(side='left')
-
-        # LOGOUT BUTTON
+        # Logout button
         logout_bar = tk.Frame(root, bg=background_colour)
         logout_bar.grid(row=4, column=0, columnspan=1, rowspan=6, sticky="news")
 
-        logout_button = tk.Button(logout_bar, text="Logout", font=(general_font, general_font_size), fg=text_colour, bg=figure_colour,
-                                  anchor=tk.CENTER, command=Login, height=1)
-        # EDIT BACK LATER TO LOGOUT
+        logout_button = tk.Button(logout_bar, text="Logout", font=(general_font, general_font_size),
+                                  fg=text_colour, bg=figure_colour, anchor=tk.CENTER, command=Login, height=1)
         logout_button.grid(sticky="news", padx=10, pady=10)
         logout_button.config(width=int(screen_width / 85.3))
 
+        # Start process
         self.statics()
         self.data(user_id)
         self.frames()
         self.refocus()
 
-
+    # Static frames are created here, these are not redrawn when selecting a different person from the friends list
     def statics(self):
-
         # clock
         self.frame1 = tk.Frame(root)
         self.frame1.grid(row=2, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
@@ -381,6 +392,7 @@ class CreateGUI:
         self.frame4.grid(row=3, column=1, padx=graph_frame_padx, pady=graph_frame_pady)
         CreateCharts("Your friends are playing", self.yaxis_freq, self.xaxis_freq, 'bar', self.frame4, self.steamid)
 
+    # Import data needed for creating the graphs and put them in usable lists
     def data(self, steamid):
         # Declare recent playtime
         self.xaxis_2weeks = []
@@ -409,10 +421,8 @@ class CreateGUI:
             self.achievement_stats = Ai.recentGamesAchievements(steamid, self.mostplayed)
             self.ach_percentage = self.achievements['achprocent']
 
-
     # Graph frames are created and data sent to the initiators
     def frames(self):
-
         # FRAME 2
         self.frame2 = tk.Frame(root)
         self.frame2.grid(row=2, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
@@ -421,12 +431,12 @@ class CreateGUI:
         # FRAME 3
         self.frame3 = tk.Frame(root)
         self.frame3.grid(row=2, column=3, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts(f"{self.gamename}", self.achievement_stats, '0', 'infomenu', self.frame3, self.steamid)
+        CreateCharts("Recent playtime", self.yaxis_2weeks, self.xaxis_2weeks, 'bar', self.frame3, self.steamid)
 
         # FRAME 5
         self.frame5 = tk.Frame(root)
         self.frame5.grid(row=3, column=2, padx=graph_frame_padx, pady=graph_frame_pady)
-        CreateCharts("Recent playtime", self.yaxis_2weeks, self.xaxis_2weeks, 'bar', self.frame5, self.steamid)
+        CreateCharts(f"{self.gamename}", self.achievement_stats, '0', 'infomenu', self.frame5, self.steamid)
 
         # FRAME 6
         self.frame6 = tk.Frame(root)
@@ -434,8 +444,7 @@ class CreateGUI:
         CreateCharts(self.gamename, self.ach_percentage, '0', 'progress', self.frame6, self.steamid)
 
 
-
-
+# Class for the login process
 class Login:
     def __init__(self):
         self.login_screen = tk.Toplevel(root)
@@ -443,10 +452,12 @@ class Login:
         self.login_screen.title('Login')
         self.login_screen.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
 
-        self.welcome_label = tk.Label(self.login_screen, text="Please enter your login details", font=(general_font, title_font_size), fg=text_colour, bg=background_colour)
+        self.welcome_label = tk.Label(self.login_screen, text="Please enter your login details", font=(general_font,
+                                      title_font_size), fg=text_colour, bg=background_colour)
         self.welcome_label.pack(expand=True)
 
-        self. username_label = tk.Label(self.login_screen, text="SteamID:", font=(general_font, general_font_size), fg=text_colour, bg=background_colour)
+        self. username_label = tk.Label(self.login_screen, text="SteamID:", font=(general_font, general_font_size),
+                                        fg=text_colour, bg=background_colour)
         self.username_label.pack(expand=True)
 
         self.login_box = tk.Entry(self.login_screen, font=title_font_size)
@@ -456,11 +467,15 @@ class Login:
         self.login_button = tk.Button(self.login_screen, text='Login', command=self.start_login, font=title_font_size)
         self.login_button.pack(expand=True)
 
-        self.login_label = tk.Label(self.login_screen, text='', font=(general_font, title_font_size), fg=text_colour, bg=background_colour)
+        self.login_label = tk.Label(self.login_screen, text='', font=(general_font, title_font_size), fg=text_colour,
+                                    bg=background_colour)
         self.login_label.pack(expand=True)
 
         root.withdraw()
 
+    # Saves ID used for login and username
+    # Checks if the profile is private
+    # Either gives and error window or tarts creation of GUI
     def start_login(self):
         global user_id
         user_id = self.login_box.get()
@@ -478,6 +493,7 @@ class Login:
             CreateGUI(user_id)
 
 
+# Class for the details window when clicking on a graph
 class Details:
     def __init__(self, frame, title):
         self.title = title
@@ -489,6 +505,7 @@ class Details:
         self.details_window.grab_set()
         self.details_build()
 
+    # Changes the text based on the title of the graph selected
     def details_build(self):
 
         if str(self.title) == 'Welcome':
@@ -496,7 +513,8 @@ class Details:
             info = "This is simply a welcome,\n I don't know what you expected"
         elif str(self.title) == 'Recent playtime':
             frame_title = 'Recent playtime'
-            info = 'Here you see how many \nminutes you or your friend has played their \nmost recent games in the past 2 weeks'
+            info = 'Here you see how many \nminutes you or your friend has played their' \
+                   '\n most recent games in the past 2 weeks'
         elif str(self.title) == 'Your friends are playing':
             frame_title = 'Your friends are playing'
             info = 'How many of your friends \n share the same game'
@@ -507,20 +525,26 @@ class Details:
             frame_title = 'Achievements'
             info = 'An overview of \nunlocked achievements for your most \nplayed game in the past 2 weeks'
 
-        self.return_button = tk.Button(self.details_window, text='return', font=(general_font, general_font_size), fg=text_colour,
+        self.return_button = tk.Button(self.details_window, text='return',
+                                       font=(general_font, general_font_size), fg=text_colour,
                                        bg=figure_colour, anchor=tk.CENTER, command=self.details_return, height=2)
         self.return_button.config(width=int(screen_width / 85.3))
         self.return_button.pack(side=tk.BOTTOM, pady=10)
 
-        self.label = tk.Label(self.details_window, text=info, bg=background_colour, fg=text_colour, font=(general_font, general_font_size))
+        self.label = tk.Label(self.details_window, text=info, bg=background_colour, fg=text_colour, 
+                              font=(general_font, general_font_size))
         self.label.pack(side=tk.BOTTOM, pady=10)
 
-        self.title_label = tk.Label(self.details_window, text=frame_title, bg=background_colour, fg=text_colour, font=(general_font, title_font_size))
+        self.title_label = tk.Label(self.details_window, text=frame_title, bg=background_colour, fg=text_colour,
+                                    font=(general_font, title_font_size))
         self.title_label.pack(side=tk.BOTTOM, pady=10)
+
+    # Destroy the details window
     def details_return(self):
         self.details_window.destroy()
 
 
+# Start everything and mainloop
 if __name__ == '__main__':
     Login()
     root.mainloop()
