@@ -27,3 +27,6 @@ Naam: Jia Jun Mak <br />
 Studentnummer: 1837162 <br />
 GitHub: jiajunmakhu <br />
 Hoofdtaak: AI
+
+Link to docs:
+https://docs.google.com/document/d/1HJl-L2X1EuTl3q7izMaP1ZWY9c3O0t8URh5cNvBjtWc/edit
