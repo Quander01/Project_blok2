@@ -1,4 +1,4 @@
-# import all bullshit
+# import everything
 import functools
 import matplotlib
 import matplotlib.pyplot as plt
@@ -142,7 +142,7 @@ class CreateCharts:
             return fig
         elif self.chart_type == "text":
             fig.text(0.5, 0.7, self.title, fontsize=title_font_size, horizontalalignment='center')
-            fig.text(0.5, 0.4, f'{int(self.data)} minute(s) of playtime average', fontsize=general_font_size, horizontalalignment='center')
+            fig.text(0.5, 0.4, f'{self.data} minute(s) of playtime average', fontsize=general_font_size, horizontalalignment='center')
             return fig
         elif self.chart_type == 'clock':
             string = strftime('%d/%m/%Y')
@@ -280,11 +280,30 @@ class CreateGUI:
 
     # Start the PI to check input, then imitate a keypress
     def start_ti(self):
-        input = ti.start().strip()
-        if input == str(0):
-            keyboard.press_and_release('Up')
-        elif input == str(1):
-            keyboard.press_and_release('Down')
+        try:
+            input = ti.start().strip()
+            if input == str(0):
+                keyboard.press_and_release('Up')
+            elif input == str(1):
+                keyboard.press_and_release('Down')
+
+        except:
+            self.sensor_error()
+
+    def sensor_error(self):
+        self.private_error = tk.Toplevel(root)
+        self.private_error.geometry(f'{popup_window_width}x{popup_window_height}+{int(popup_x)}+{int(popup_y)}')
+        self.private_error.configure(bg=background_colour, width=overlay_window_width, height=overlay_window_height)
+        self.private_error.title('error')
+        self.private_error.grab_set()
+
+        self.error_label = tk.Label(self.private_error, text="The sensor is not connected",
+                                    font=(general_font, title_font_size), fg=text_colour, bg=background_colour, pady=20)
+        self.error_label.pack()
+
+        self.ok_button = tk.Button(self.private_error, text='OK', font=(general_font, general_font_size),
+                                   command=self.private_error.destroy)
+        self.ok_button.pack(expand=True)
 
     # Displays a window with "this profile is private"
     def profile_error(self):
@@ -334,7 +353,7 @@ class CreateGUI:
 
         profile_button = tk.Button(profile_bar, text="Back to my data", font=(general_font, general_font_size),
                                    fg=text_colour, bg=figure_colour, anchor=tk.CENTER,
-                                   command=self.show_profile, height=4)
+                                   command=self.show_profile, height=2)
         profile_button.grid(sticky="news", padx=10, pady=10)
         profile_button.config(width=int(screen_width / 85.3))
 
