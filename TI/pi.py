@@ -53,6 +53,8 @@ def display_distance(distance):
         time.sleep(1)
         led_pins[0].value(0)
         time.sleep(1)
+    else:
+        print(None)
 
 while True:
     distance = measure_distance()
